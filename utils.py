@@ -23,3 +23,9 @@ def linear(x, *args):
     for idx, arg in enumerate(args):
         res += x[idx]*arg
     return res
+
+def mpolynomial(x, *args):
+    res = 0
+    for col, colargs in zip(x, numpy.array_split(args, len(x))):
+        res += polynomial(col, *colargs)
+    return res
