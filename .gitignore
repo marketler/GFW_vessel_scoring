@@ -5,3 +5,6 @@ share/
 lib/
 *~
 *.pyc
+classification-hourlyResultsAll.txt
+*.csv
+*.msg
