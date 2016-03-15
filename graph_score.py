@@ -2,18 +2,19 @@ from matplotlib.pyplot import *
 from numpy import *
 from utils import *
 
-def graph_score(x, windowSize):
+def graph_score(x, col):
     xfishy = fishy(x)
     xnonfishy = nonfishy(x)
 
     histfig = figure(figsize=(20,5))
     subplot = histfig.add_subplot(111)
-    new_score_fishy = subplot.hist(xfishy["measure_new_score_%s" % windowSize], bins=200, normed=False, color='b', alpha=0.5, label="fishy score")
-    new_score_nonfishy = subplot.hist(xnonfishy["measure_new_score_%s" % windowSize], bins=200, normed=False, color='r', alpha=0.5, label="nonfishy score")
+    new_score_fishy = subplot.hist(xfishy[col], bins=200, normed=False, color='b', alpha=0.5, label="fishy score")
+    new_score_nonfishy = subplot.hist(xnonfishy[col], bins=200, normed=False, color='r', alpha=0.5, label="nonfishy score")
     legend()
+    show()
 
     xclassified = x[x["classification"] != Inf]
-    print "Squared numerical error: %s" % (sum((xclassified['measure_new_score_%s' % windowSize] - xclassified['classification'])**2)/xclassified.shape[0])
+    print "Squared numerical error: %s" % (sum((xclassified[col] - xclassified['classification'])**2)/xclassified.shape[0])
 
     total = sum(new_score_fishy[0] + new_score_nonfishy[0])
     non_overlap = sum(abs(new_score_fishy[0] - new_score_nonfishy[0]))

@@ -1,5 +1,6 @@
 import numpy
 import os.path
+import math
 
 # Define some usefull functions
 def clamp(x, low, high):
@@ -30,6 +31,12 @@ def mpolynomial(x, *args):
     for col, colargs in zip(x, numpy.array_split(args, len(x))):
         res += polynomial(col, *colargs)
     return res
+
+def zigmoid(z):
+    return 1. / (1. + math.e**(-z)) 
+
+def zmpolynomial(x, *args):
+    return zigmoid(mpolynomial(x, *args))
 
 def cached(path):
     def cached(fn):
