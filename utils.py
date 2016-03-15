@@ -1,4 +1,5 @@
 import numpy
+import os.path
 
 # Define some usefull functions
 def clamp(x, low, high):
@@ -29,3 +30,20 @@ def mpolynomial(x, *args):
     for col, colargs in zip(x, numpy.array_split(args, len(x))):
         res += polynomial(col, *colargs)
     return res
+
+def cached(path):
+    def cached(fn):
+        def cached(*arg, **kw):
+            if os.path.exists(path):
+                return numpy.load(path)['cached']
+            else:
+                res = fn(*arg, **kw)
+                numpy.savez_compressed(path, cached = res)
+                return res
+        return cached
+    return cached
+
+def fishy(x):
+    return x[x["classification"] >= 0.5]
+def nonfishy(x):
+    return x[x["classification"] < 0.5]
