@@ -6,8 +6,13 @@ import datetime
 import sys
 import os.path
 
-def parse_time(t):
-    return float(datetime.datetime.strptime(t, "%Y%m%d_%H%M%S").strftime("%s"))
+def get_time(r):
+    if 'DATETIME' in r:
+        return float(datetime.datetime.strptime(r['DATETIME'], "%Y-%m-%d %H:%M:%S").strftime("%s"))        
+    elif 'TIME' in r:
+        return float(datetime.datetime.strptime(r['TIME'], "%Y%m%d_%H%M%S").strftime("%s"))
+    else:
+        assert False, "NO TIME: %s" % r
 
 colmap = {
   "mmsi": lambda r: float(r['MMSI']),
@@ -15,7 +20,7 @@ colmap = {
   "lat": lambda r: float(r['LATITUDE']),
   "course": lambda r: float(r['COG']),
   "speed": lambda r: float(r['SOG']),
-  "timestamp": lambda r: parse_time(r['TIME']),
+  "timestamp": get_time,
   "classification": lambda r: float(r['COARSE_FIS'])
 }
 
