@@ -1,7 +1,8 @@
 import numpy as np
+import numpy.lib.recfunctions
 import os.path
 import math
-import scipy.optimize
+import sys
 
 # Define some usefull functions
 def clamp(x, low, high):
@@ -70,30 +71,10 @@ def get_polynomial_cols(x, windows):
 
     return cols
 
-def fit_score(x, windows, grade=4, lambda_val=0.0001):
-    # A pretty straight-forward implementation of regularized
-    # logistical regression without an analytical gradient...
 
-    cols = get_polynomial_cols(x, windows)
-    y = x['classification']
-    m = float(y.shape[0])
-
-    def objective(theta):
-        h = zmpolynomial(cols, *theta)
-
-        a = -y*np.log(np.where(h == 0., 1e-100, h))
-        a = np.where(y == 0., 0., a)
-        b = -(1. - y)*np.log(np.where(h == 1., 1e-100, 1. - h))
-        b = np.where(y == 1., 0., b)
-
-        J = np.sum(a + b) / m
-        Jreg = J + lambda_val * np.sum(theta**2) / (2 * m)
-        return Jreg
-  
-    return scipy.optimize.minimize(objective, [1]*(len(cols)*grade)).x
-
-    # return curve_fit(
-    #     zmpolynomial,
-    #     cols,
-    #     x['classification'],
-    #     [1]*(len(cols)*grade))[0]
+def get_windows(x):
+    all_windows = [int(name[len("measure_speedavg_"):])
+                   for name in x.dtype.names
+                   if name.startswith("measure_speedavg_")]
+    all_windows.sort()
+    return all_windows
