@@ -21,9 +21,9 @@ def load_dataset(path, size = 20000):
     #   exponentially distributed
 
     x = np.load(path)['x']
-    x = np.concatenate((fishy(x)[:size/2], nonfishy(x)[:size/2]))
-    np.random.shuffle(x)
 
+    x = x[np.isinf(x['classification']) != True]
+    
     all_windows = get_windows(x)
 
     for window in all_windows:
@@ -33,12 +33,17 @@ def load_dataset(path, size = 20000):
         x = np.lib.recfunctions.append_fields(x, 'measure_coursestddev_%s_log' % window, [], dtypes='<f8', fill_value=0.0)
         x['measure_coursestddev_%s_log' % window] = np.log10(x['measure_coursestddev_%s' % window]+0.001)
 
-
     x = np.lib.recfunctions.append_fields(x, 'score', [], dtypes='<f8', fill_value=0.0)
 
-    length = x.shape[0]
-    xtrain = x[:length / 2]
-    xcross = x[length/2:length*3/4]
-    xtest = x[length*3/4:]
+    xuse = numpy.copy(x)
+    np.random.shuffle(xuse)
+    size = min(fishy(xuse).shape[0], nonfishy(xuse).shape[0], size/2)
+    xuse = np.concatenate((fishy(xuse)[:size], nonfishy(xuse)[:size]))
+    np.random.shuffle(xuse)
 
-    return xtrain, xcross, xtest
+    length = xuse.shape[0]
+    xtrain = xuse[:length / 2]
+    xcross = xuse[length/2:length*3/4]
+    xtest = xuse[length*3/4:]
+
+    return x, xtrain, xcross, xtest

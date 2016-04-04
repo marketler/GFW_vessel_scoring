@@ -31,7 +31,7 @@ def fit_score(x, windows, grade=4, lambda_val=0.0001):
   
     return scipy.optimize.minimize(objective, [1]*(len(cols)*grade)).x
 
-    # return curve_fit(
+    # return scipy.optimize.curve_fit(
     #     zmpolynomial,
     #     cols,
     #     x['classification'],
@@ -109,11 +109,14 @@ def optimize_polynomial_degree(xtrain, xcross, min_window, max_grade = 10):
     matplotlib.pyplot.xlabel("Polynomial degree (for each variable)")
     matplotlib.pyplot.show()
 
-
-def evaluate_score(xtrain, xtest, grade, min_window):
+def train_and_score(xtrain, xtest, grade, min_window):
     windows = [min_window]
     score_args = fit_score(xtrain, windows, grade)
     xtest['score'][:] = zmpolynomial(get_polynomial_cols(xtest, windows), *score_args)
+    return score_args
+
+def evaluate_score(xtrain, xtest, grade, min_window):
+    score_args = train_and_score(xtrain, xtest, grade, min_window)
     graph_score.graph_score(xtest, "score")
     graph_precall.graph_precall(xtest, "score")
     print "Score window:", min_window
