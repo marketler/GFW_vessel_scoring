@@ -7,3 +7,7 @@ It also contains some tools to deal with the data formats of some of our partner
 
 * Kristinas CSV-based format
 * Alex' and Chris' fishing-hour sidecar format
+
+Data for this project is too big to store in this repository, but can
+be found here:
+https://drive.google.com/folderview?id=0B7rRlQvqnpGIZVpSSFJRakhMcFk&usp=sharing
