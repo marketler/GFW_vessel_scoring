@@ -53,11 +53,14 @@ def cached(path):
         return cached
     return cached
 
-def fishy(x):
-    return x[x["classification"] >= 0.5]
-def nonfishy(x):
-    return x[x["classification"] < 0.5]
+def is_fishy(x):
+    return x["classification"] >= 0.5
 
+def fishy(x):
+    return x[is_fishy(x)]
+
+def nonfishy(x):
+    return x[~is_fishy(x)]
 
 def get_polynomial_cols(x, windows):
     colnames = []
@@ -78,3 +81,11 @@ def get_windows(x):
                    if name.startswith("measure_speedavg_")]
     all_windows.sort()
     return all_windows
+
+
+def make_simple_features(data, names, dtype=float, **kwargs):
+    features = np.zeros([len(data), len(names)], dtype=dtype)
+    for i, name in enumerate(names):
+        name = name.format(**kwargs)
+        features[:,i] = data[name]
+    return features
