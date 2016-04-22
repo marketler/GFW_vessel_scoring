@@ -83,7 +83,12 @@ def get_windows(x):
     return all_windows
 
 
-def make_simple_features(data, names, dtype=float, **kwargs):
+def get_cols_by_name(data, names, dtype=float, **kwargs):
+    """get columns from recarray `data` with `names` and return as `dtype`
+
+    kwargs is substititued into each name using str.format before
+    using the name to extract an item.
+    """
     features = np.zeros([len(data), len(names)], dtype=dtype)
     for i, name in enumerate(names):
         name = name.format(**kwargs)

@@ -1,13 +1,19 @@
 import numpy as np
-from utils import make_simple_features
+from utils import get_cols_by_name
 
 COURSE_STD = 0
 SPEED_STD = 1
 SPEED_AVG = 2
 SHORE_DIST = 3
 
-# TODO: make this inherit from appropriate sklearn lasses
+# TODO: make this inherit from appropriate sklearn classes
 class LegacyHeuristicModel:
+
+    def __init__(self, window='3600'):
+        """
+        window - window size to use in features
+        """
+        self.window = window
 
     def fit(self, X, y):
         return self
@@ -24,10 +30,11 @@ class LegacyHeuristicModel:
         proba[:, 1] = score
         return proba
 
-    @staticmethod
-    def make_features(data, window='3600'):
-          return make_simple_features(data, ['measure_coursestddev_{window}',
-                                             'measure_speedstddev_{window}',
-                                             'measure_speedavg_{window}',
-            #                                'distance_to_shore' # XXX waiting for this feature to be re-added
-                                             ], window=window)
+    def make_features(self, data):
+        """Convert dataset into feature matrix suitable for model"""
+        return get_cols_by_name(data,
+                    ['measure_coursestddev_{window}' ,
+                    'measure_speedstddev_{window}',
+                    'measure_speedavg_{window}',
+                    # 'distance_to_shore' # XXX waiting for this feature to be re-added
+                    ], window=self.window)
