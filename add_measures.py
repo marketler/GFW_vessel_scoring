@@ -10,6 +10,11 @@ import numpy
 from numpy import *
 from numpy.lib.recfunctions import *
 
+def append_field_if_new(x, name):
+    if name in x.dtype.names:
+        return x
+    return append_fields(x, name, [], dtypes='<f8', fill_value=0.0).filled()
+
 def add_measures(x, windowSizes = [1800, 3600, 10800, 21600, 43200, 86400], verbose=True, err=sys.stderr):
     x = x[x['course'] != Inf]
     x = x[x['speed'] != Inf]
@@ -17,8 +22,8 @@ def add_measures(x, windowSizes = [1800, 3600, 10800, 21600, 43200, 86400], verb
     # Sort by mmsi, then by timestamp
     x = x[lexsort((x['timestamp'], x['mmsi']))]
 
-    x = append_fields(x, 'measure_speed', [], dtypes='<f8', fill_value=0.0)
-    x = append_fields(x, 'measure_course', [], dtypes='<f8', fill_value=0.0)
+    x = append_field_if_new(x, 'measure_speed')
+    x = append_field_if_new(x, 'measure_course')
 
     # Normalize speed and heading
     speed = x['speed'] / 17.0
@@ -27,12 +32,10 @@ def add_measures(x, windowSizes = [1800, 3600, 10800, 21600, 43200, 86400], verb
 
     windowSizes = [1800, 3600, 10800, 21600, 43200, 86400]
     for windowSize in windowSizes:
-        x = append_fields(x, 'measure_speedstddev_%s' % windowSize, [], dtypes='<f8', fill_value=0.0)
-        x = append_fields(x, 'measure_speedavg_%s' % windowSize, [], dtypes='<f8', fill_value=0.0)
-        x = append_fields(x, 'measure_coursestddev_%s' % windowSize, [], dtypes='<f8', fill_value=0.0)
-        x = append_fields(x, 'measure_new_score_%s' % windowSize, [], dtypes='<f8', fill_value=0.0)
-
-        x = x.filled()
+        x = append_field_if_new(x, 'measure_speedstddev_%s' % windowSize)
+        x = append_field_if_new(x, 'measure_speedavg_%s' % windowSize)
+        x = append_field_if_new(x, 'measure_coursestddev_%s' % windowSize)
+        x = append_field_if_new(x, 'measure_new_score_%s' % windowSize)
 
         # Calculate rolling stddev/avg of course and speed
         start_idx = 0
