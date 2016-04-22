@@ -23,7 +23,7 @@ def load_dataset(path, size = 20000):
     x = np.load(path)['x']
 
     x = x[np.isinf(x['classification']) != True]
-    
+
     all_windows = get_windows(x)
 
     for window in all_windows:
@@ -45,5 +45,102 @@ def load_dataset(path, size = 20000):
     xtrain = xuse[:length / 2]
     xcross = xuse[length/2:length*3/4]
     xtest = xuse[length*3/4:]
+
+    return x, xtrain, xcross, xtest
+
+def _subsample_even(x0, mmsi, n):
+    """Return `n` subsamples from `x0`
+
+    - all samples have given `mmsi`
+
+    - samples are evenly divided between fishing and nonfishing
+    """
+    # Create a mask that is true whenever mmsi is one of the mmsi
+    # passed in
+    mask = np.zeros([len(x0)], dtype=bool)
+    for m in mmsi:
+        mask |= (x0['mmsi'] == m)
+    x = x0[mask]
+    # Pick half the values from fishy rows and half from nonfishy rows.
+    f = fishy(x)
+    nf = nonfishy(x)
+    f = np.random.choice(f, n//2, replace=False)
+    nf = np.random.choice(nf, n//2, replace=False)
+    ss = np.concatenate([f, nf])
+    np.random.shuffle(ss)
+    return ss
+
+def _subsample_proportional(x0, mmsi, n):
+    """Return `n` subsamples from `x0`
+
+    - all samples have given `mmsi`
+
+    - samples are random, so should have ~same be in the same proportions
+      as the x0 for the given mmsi.
+    """
+    # Create a mask that is true whenever mmsi is one of the mmsi
+    # passed in
+    mask = np.zeros([len(x0)], dtype=bool)
+    for m in mmsi:
+        mask |= (x0['mmsi'] == m)
+    x = x0[mask]
+    # Pick values randomly
+    ss = np.random.choice(x, n, replace=False)
+    np.random.shuffle(ss)
+    return ss
+
+def load_dataset_by_vessel(path, size = 20000, even_split=True, seed=4321):
+    """Load a dataset from `path` and return train, valid and test sets
+
+    path - path to the dataset
+    size - number of samples to return in total, divided between the
+           three sets as (size//2, size//4, size//4)
+    even_split - if True, use 50/50 fishing/nonfishing split for training
+                  data, otherwise sample the data randomly.
+
+    The data at path is first randomly divided by divided into
+    training (1/2), validation (1/4) and test(1/4) data sets.
+    These sets are chosen so that MMSI values are not shared
+    across the datasets.
+
+    The validation and test data are sampled randomly to get the
+    requisite number of points. The training set is sampled randomly
+    if `even_split` is False, otherwise it is chose so that half the
+    points are fishing.
+
+    """
+    # Set the seed so that we can reproduce results consistently
+    np.random.seed(seed)
+
+    # Load the dataset and strip out any points that aren't classified
+    # (has classification == Inf)
+    x = np.load(path)['x']
+    x = x[np.isinf(x['classification']) != True]
+
+    # For each window name ('3600', '10800', etc) add log versions of
+    # the stddev values.
+    all_windows = get_windows(x)
+    for window in all_windows:
+        x = np.lib.recfunctions.append_fields(x, 'measure_speedstddev_%s_log' % window, [], dtypes='<f8', fill_value=0.0)
+        x['measure_speedstddev_%s_log' % window] = np.log10(x['measure_speedstddev_%s' % window]+0.001)
+
+        x = np.lib.recfunctions.append_fields(x, 'measure_coursestddev_%s_log' % window, [], dtypes='<f8', fill_value=0.0)
+        x['measure_coursestddev_%s_log' % window] = np.log10(x['measure_coursestddev_%s' % window]+0.001)
+    x = np.lib.recfunctions.append_fields(x, 'score', [], dtypes='<f8', fill_value=0.0)
+
+    # Get the list of MMSI and shuffle them. The compute the cumulative
+    # lengths so that we can divide the points ~ evenly. Use search
+    # sorted to find the division points
+    mmsi = list(set(x['mmsi']))
+    np.random.shuffle(mmsi)
+    nx = len(x)
+    sums = np.cumsum([(x['mmsi'] == m).sum() for m in mmsi])
+    n1, n2 = np.searchsorted(sums, [nx//2, 3*nx//4])
+
+    train_subsample = _subsample_even if even_split else _subsample_proportional
+
+    xtrain = train_subsample(x, mmsi[:n1], size//2)
+    xcross = _subsample_proportional(x, mmsi[n1:n2], size//4)
+    xtest = _subsample_proportional(x, mmsi[n2:], size//4)
 
     return x, xtrain, xcross, xtest
