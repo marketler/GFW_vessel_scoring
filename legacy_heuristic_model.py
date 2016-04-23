@@ -19,6 +19,7 @@ class LegacyHeuristicModel:
         return self
 
     def predict_proba(self, X):
+        X = self._make_features(X)
         score = (X[:,COURSE_STD] + X[:,SPEED_STD] + X[:,SPEED_AVG]) * 2.0 / 3.0
         score = np.clip(score, 0, 1)
         # Port behavior is hard to distinguish from fishing,
@@ -30,7 +31,7 @@ class LegacyHeuristicModel:
         proba[:, 1] = score
         return proba
 
-    def make_features(self, data):
+    def _make_features(self, data):
         """Convert dataset into feature matrix suitable for model"""
         return get_cols_by_name(data,
                     ['measure_coursestddev_{window}' ,
