@@ -47,7 +47,7 @@ def evaluate_model(model, test_data, name=None):
     a1_precall = a1.twinx()
     def convert_range(ax_f):
         y1, y2 = ax_f.get_ylim()
-        a1_precall.set_ylim(y1, y2 / ylim)
+        a1_precall.set_ylim(y1 / ylim, y2 / ylim)
         a1_precall.figure.canvas.draw()
     a1.callbacks.connect("ylim_changed", convert_range)
 
@@ -56,14 +56,14 @@ def evaluate_model(model, test_data, name=None):
     new_score_nonfishy = a1.hist(score_nonfishy, bins=200,
             normed=True, color='r', alpha=0.5, label="nonfishy score")
 
-    a1_precall.plot(thresholds, precisions[:-1], color='g', label='Precision')
-    a1_precall.plot(thresholds, recalls[:-1], color='b', label='Recall')
+    plot_precision = a1_precall.plot(thresholds, precisions[:-1], color='g', label='Precision')
+    plot_recall = a1_precall.plot(thresholds, recalls[:-1], color='b', label='Recall')
 
-    a1.legend()
     a1.set_ylim(0, ylim)
     a1.set_xlim(0, 1)
 
-    a1.set_ylabel('Histogram')
+    a1.set_ylabel('Histogram count')
+    a1.set_xlabel('Prediction score')
     a1_precall.set_ylabel('Curve')
 
     fpr, tpr, _ = metrics.roc_curve(is_fishy, score)
@@ -74,9 +74,15 @@ def evaluate_model(model, test_data, name=None):
 
     lloss = metrics.log_loss(is_fishy, predicted)
 
-    label = 'ROC curve (area = %0.2f/ log loss = %0.2f / fp = %0.2f)' % (auc, lloss, fp)
-    a2.plot(fpr, tpr, label=label)
-    a2.legend(loc='lower right')
+    label = 'ROC curve\narea = %0.2f\nlog loss = %0.2f\nfp = %0.2f' % (auc, lloss, fp)
+    a2.plot(fpr, tpr, color='r', label=label)
+    a2.set_xlabel('False positive rate')
+    a2.set_ylabel('True positive rate')
+
+    h1, l1 = a2.get_legend_handles_labels()
+    h2, l2 = a1.get_legend_handles_labels()
+    h3, l3 = a1_precall.get_legend_handles_labels()
+    a2.legend(h1+h2+h3, l1+l2+l3, loc='lower right')
 
     plt.show()
 
@@ -85,15 +91,26 @@ def evaluate_model(model, test_data, name=None):
     overlap = total - non_overlap
     error = overlap / total
 
-def compare_auc(models, test_data):
+def compare_models(models, test_data):
     is_fishy = utils.is_fishy(test_data)
-    f, a1 = plt.subplots(figsize=(12,12))
+
+    f, (a1, a2) = plt.subplots(2, 1, figsize=(20,20))
+
     for (name, mdl) in models:
         score = mdl.predict_proba(test_data)[:,1]
         fpr, tpr, _ = (metrics.roc_curve(is_fishy, score))
         auc = metrics.auc(fpr, tpr)
         a1.plot(fpr, tpr, label='{0}: {1:.3f} AUC'.format(name, auc))
-    plt.xlabel('False Positive Rate')
-    plt.ylabel('True Positive Rate')
-    plt.legend(loc="lower right")
+    a1.set_xlabel('False Positive Rate')
+    a1.set_ylabel('True Positive Rate')
+    a1.legend(loc="lower right")
+
+    for (name, mdl) in models:
+        score = mdl.predict_proba(test_data)[:,1]
+        precisions, recalls, thresholds = metrics.precision_recall_curve(is_fishy, score)
+        a2.plot(recalls, precisions, label='{0}'.format(name))
+    a2.set_xlabel('Recall')
+    a2.set_ylabel('Precision')
+    a2.legend(loc="lower right")
+
     plt.show()
