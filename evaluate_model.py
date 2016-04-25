@@ -42,20 +42,32 @@ def evaluate_model(model, test_data, name=None):
     model_description = str(model) if (name is None) else name
     display(HTML("<h1>%s</h1>" % model_description))
 
+
+    ylim = 10.0
+
     f, (a1, a2) = plt.subplots(1, 2, figsize=(20,5))
+
+    a1_precall = a1.twinx()
+    def convert_range(ax_f):
+        y1, y2 = ax_f.get_ylim()
+        a1_precall.set_ylim(y1, y2 / ylim)
+        a1_precall.figure.canvas.draw()
+    a1.callbacks.connect("ylim_changed", convert_range)
+
     new_score_fishy = a1.hist(score_fishy, bins=200,
             normed=True, color='b', alpha=0.5, label="fishy score")
     new_score_nonfishy = a1.hist(score_nonfishy, bins=200,
             normed=True, color='r', alpha=0.5, label="nonfishy score")
 
-    ylim = 10
-
-    a1.plot(thresholds, precisions[:-1] * ylim, color='g', label='Precision')
-    a1.plot(thresholds, recalls[:-1] * ylim, color='b', label='Recall')
+    a1_precall.plot(thresholds, precisions[:-1], color='g', label='Precision')
+    a1_precall.plot(thresholds, recalls[:-1], color='b', label='Recall')
 
     a1.legend()
     a1.set_ylim(0, ylim)
     a1.set_xlim(0, 1)
+
+    a1.set_ylabel('Histogram')
+    a1_precall.set_ylabel('Curve')
 
     fpr, tpr, _ = metrics.roc_curve(is_fishy, score)
     auc = metrics.auc(fpr, tpr)
