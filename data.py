@@ -85,9 +85,31 @@ def _subsample_proportional(x0, mmsi, n):
         mask |= (x0['mmsi'] == m)
     x = x0[mask]
     # Pick values randomly
+    if n > len(x):
+        print "Warning, inufficient items to sample, returning", len(x)
+        n = len(x)
     ss = np.random.choice(x, n, replace=False)
     np.random.shuffle(ss)
     return ss
+
+def add_log_measures(x):
+    """Add log versions of each of speedstddev and coursestdev
+    """
+    all_windows = get_windows(x)
+    for window in all_windows:
+        x = np.lib.recfunctions.append_fields(x,
+                'measure_speedstddev_%s_log' % window, [],
+                 dtypes='<f8', fill_value=0.0)
+        x['measure_speedstddev_%s_log' % window] = np.log10(
+                x['measure_speedstddev_%s' % window]+0.001)
+
+        x = np.lib.recfunctions.append_fields(x,
+                'measure_coursestddev_%s_log' % window, [],
+                dtypes='<f8', fill_value=0.0)
+        x['measure_coursestddev_%s_log' % window] = np.log10(
+                x['measure_coursestddev_%s' % window]+0.001)
+    return np.lib.recfunctions.append_fields(x, 'score', [],
+                                    dtypes='<f8', fill_value=0.0)
 
 def load_dataset_by_vessel(path, size = 20000, even_split=True, seed=4321):
     """Load a dataset from `path` and return train, valid and test sets
@@ -117,16 +139,14 @@ def load_dataset_by_vessel(path, size = 20000, even_split=True, seed=4321):
     x = np.load(path)['x']
     x = x[np.isinf(x['classification']) != True]
 
+    if size > len(x):
+        print "Warning, insufficient items to sample, returning all"
+        size = len(x)
+
+
     # For each window name ('3600', '10800', etc) add log versions of
     # the stddev values.
-    all_windows = get_windows(x)
-    for window in all_windows:
-        x = np.lib.recfunctions.append_fields(x, 'measure_speedstddev_%s_log' % window, [], dtypes='<f8', fill_value=0.0)
-        x['measure_speedstddev_%s_log' % window] = np.log10(x['measure_speedstddev_%s' % window]+0.001)
-
-        x = np.lib.recfunctions.append_fields(x, 'measure_coursestddev_%s_log' % window, [], dtypes='<f8', fill_value=0.0)
-        x['measure_coursestddev_%s_log' % window] = np.log10(x['measure_coursestddev_%s' % window]+0.001)
-    x = np.lib.recfunctions.append_fields(x, 'score', [], dtypes='<f8', fill_value=0.0)
+    x = add_log_measures(x)
 
     # Get the list of MMSI and shuffle them. The compute the cumulative
     # lengths so that we can divide the points ~ evenly. Use search
