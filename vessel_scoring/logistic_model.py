@@ -1,6 +1,6 @@
 import numpy as np
 from sklearn.linear_model import LogisticRegression
-from utils import get_polynomial_cols, zigmoid
+from vessel_scoring.utils import get_polynomial_cols, zigmoid
 
 
 def make_features(data, windows, order, cross):
