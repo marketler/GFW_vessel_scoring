@@ -58,9 +58,9 @@ class LogisticModel(LogisticRegression):
         return make_features(data, self.windows, self.order, self.cross)
 
     def dump_dict(self):
-        return {'coef' : self.coef_,
-                'intercept' : self.intercept_,
-                'windows' : self.windows,
+        return {'coef' : list(self.coef_),
+                'intercept' : list(self.intercept_),
+                'windows' : list(self.windows),
                 'order' : self.order,
                 'cross' : self.cross}
 
