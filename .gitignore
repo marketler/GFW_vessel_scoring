@@ -10,3 +10,4 @@ classification-hourlyResultsAll.txt
 *.msg
 datasets/
 env/
+models/
