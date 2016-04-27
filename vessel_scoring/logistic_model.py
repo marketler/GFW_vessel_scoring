@@ -27,9 +27,16 @@ def make_features(data, windows, order, cross):
 
 class LogisticModel(LogisticRegression):
 
-    def __init__(self, order=4, cross=0, windows=['3600'],
-                    random_state=4321):
+    def __init__(self, coef=None, intercept=None, order=4, cross=0,
+                        windows=['3600'], random_state=4321):
         """
+
+        The first to arguments are here to make interface consistent
+        with LogisiticScorer:
+
+        ceof - feature coeficients to initialize the model with
+        intercept - intercept value to initialize the model with
+
         order - maximum order of polynomial terms
         cross - maximum order of cross terms (2 is minimum for any effect)
         windows - list of window sizes to use in features
@@ -42,6 +49,10 @@ class LogisticModel(LogisticRegression):
         self.order = order
         self.cross = cross
         self.windows = windows
+        if coef is not None:
+            self.coef_ = np.array(coef)
+        if intercept is not None:
+            self.intercept_ = np.array(intercept)
 
     def fit(self, X, y):
         """Fit model bease on features `X` and labels `y`"""
@@ -91,7 +102,6 @@ class LogisticScorer:
         """
         X = self._make_features(X)
         z = (self.coef * X).sum(axis=1) + self.intercept
-        print z.max(), z.min(), abs(X).max(), abs(self.coef).max(), self.intercept
         score = zigmoid(z)
         proba = np.zeros([len(X), 2])
         proba[:, 0] = 1 - score # Probability not fishing
