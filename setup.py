@@ -39,6 +39,7 @@ distutils.core.setup(
     packages=[
         'vessel_scoring',
     ],
+    package_data={'vessel_scoring': ['models/*']},
     requires=[],
     version='1.0',
     author='Egil Moeller, Timothy Hochberg',

@@ -38,6 +38,7 @@ def get_default_training_data(transit_weight = 10):
 
     return numpy.concatenate([xtrain, xcross])
 
+models_path = os.path.join(os.path.dirname(__file__), "models")
 
 def train_models(models = None, train = None, save=True):
     if models is None:
@@ -47,11 +48,11 @@ def train_models(models = None, train = None, save=True):
     trained_models = [(name, vessel_scoring.evaluate_model.train_model(mdl, train))
                       for (name, mdl) in models]
     if save:
-        if not os.path.exists("models"):
-            os.mkdir("models")
+        if not os.path.exists(models_path):
+            os.mkdir(models_path)
         for (name, model) in trained_models:
             if hasattr(model, 'dump_dict'):
-                with open("models/%s.json" % name, "w") as f:
+                with open(os.path.join(models_path, "%s.json" % name), "w") as f:
                     model_class = type(model)
                     json.dump({'model': "%s.%s" % (model_class.__module__, model_class.__name__),
                                'args': model.dump_dict(),
@@ -62,8 +63,9 @@ def train_models(models = None, train = None, save=True):
 
 def load_models():
     res = {}
-    for filename in os.listdir("models"):
-        with open(os.path.join("models", filename)) as f:
+    
+    for filename in os.listdir(models_path):
+        with open(os.path.join(models_path, filename)) as f:
             conf = json.load(f)
         name = filename.rsplit(".", 1)[0]
 
