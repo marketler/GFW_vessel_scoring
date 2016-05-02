@@ -3,7 +3,6 @@ import numpy.lib.recfunctions
 import os.path
 import math
 import scipy.optimize
-import matplotlib.pyplot
 import sys
 from vessel_scoring.utils import *
 

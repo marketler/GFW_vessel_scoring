@@ -5,7 +5,8 @@ import distutils.core
 import distutils.command.build
 
 from distutils.command.build import build
-import os, sys
+import os.path
+import sys
 
 class BuildModelsCommand(distutils.core.Command):
     description = "Train models and save the model parameters to file"
@@ -15,6 +16,8 @@ class BuildModelsCommand(distutils.core.Command):
     def finalize_options(self):
         pass
     def run(self):
+        if os.path.exists(os.path.join(os.path.dirname(__file__), 'vessel_scoring', 'models')):
+            return
         print "Training models...",
         sys.stdout.flush()
         import vessel_scoring.models
@@ -40,7 +43,7 @@ distutils.core.setup(
         'vessel_scoring',
     ],
     package_data={'vessel_scoring': ['models/*']},
-    requires=[],
+    install_requires=["numpy", "scikit_learn", "scipy", "matplotlib", "ipython"],
     version='1.0',
     author='Egil Moeller, Timothy Hochberg',
     author_email='egil@skytruth.org, tim@skytruth.org',
