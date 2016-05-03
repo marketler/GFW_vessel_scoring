@@ -4,11 +4,14 @@ import vessel_scoring.logistic_model
 import vessel_scoring.utils
 import vessel_scoring.data
 import vessel_scoring.evaluate_model
+import vessel_scoring.add_measures
 
 import json
 import os.path
 import numpy
 import importlib
+import datetime
+
 
 untrained_models = [
     ('Logistic',               vessel_scoring.logistic_model.LogisticModel(windows=[43200], order=6)),
@@ -74,3 +77,40 @@ def load_models():
 
         res[name] = modelcls(**conf['args'])
     return res
+
+
+class AddScore(object):
+    """
+    Adds score to track points.  Input is sorted by mmsi,track,timestamp.
+    """
+
+    def __init__(self, model, messages):
+        self.messages = vessel_scoring.add_measures.AddNormalizedMeasures(messages)
+
+        self.model = model
+
+        for window_size in self.model.windows:
+            self.messages = vessel_scoring.add_measures.AddWindowMeasures(self.messages, datetime.timedelta(seconds=window_size))
+
+        self._iterator = None
+
+        self.model = vessel_scoring_models['Logistic']
+
+    def __iter__(self):
+        if not self._iterator:
+            self._iterator = self.process()
+        return self._iterator
+
+    def __next__(self):
+        return next(self._iterator)
+
+    next = __next__
+
+    def process(self):
+        for msg in self.messages:
+            msg['measure_new_score'] = float(self.model.predict_proba({
+                    key: [value]
+                    for key, value in msg.iteritems()
+                    })[0][1])
+            yield msg
+
