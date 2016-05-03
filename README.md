@@ -8,6 +8,7 @@ It also contains some tools to deal with the data formats of some of our partner
 * Kristinas CSV-based format
 * Alex' and Chris' fishing-hour sidecar format
 
-Data for this project is too big to store in this repository, but can
-be found here:
+Training data for this project is too big to store in this repository. It will be licensed separately. If you have been given acces, the datacan be found here:
 https://drive.google.com/folderview?id=0B7rRlQvqnpGIZVpSSFJRakhMcFk&usp=sharing
+
+Note: You do not need the training data to use the predition models as the trained model parameters are stored in the repository.
