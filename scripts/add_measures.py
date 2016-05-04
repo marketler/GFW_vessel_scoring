@@ -2,30 +2,15 @@
 import sys, os.path; sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 import vessel_scoring.add_measures
+import vessel_scoring.utils
 import numpy
 import itertools
 import datetime
 
 orig = numpy.load(sys.argv[1])['x']
 
-def convert_row(row):
-    res = {name:row[name] for name in row.dtype.names}
-    res['timestamp'] = datetime.datetime.fromtimestamp(res['timestamp'])
-    return res
-
-messages = (convert_row(row) for row in orig)
+messages = vessel_scoring.utils.numpy_to_messages(orig)
 messages = vessel_scoring.add_measures.AddMeasures(messages)
-
-peek, messages = itertools.tee(messages, 2)
-columns = peek.next().keys()
-res = numpy.zeros(len(orig), dtype = [(name, 'f8') for name in columns])
-for message in messages:
-    for column in columns:
-        val = message.get(column, None)
-        if isinstance(val, datetime.datetime):
-            val = float(val.strftime("%s"))
-        elif isinstance(val, datetime.timedelta):
-            val = val.total_seconds()
-        res[column] = val
+res = vessel_scoring.utils.messages_to_numpy(messages, len(orig))
 
 numpy.savez_compressed(sys.argv[2], x=res)

@@ -3,6 +3,8 @@ import numpy.lib.recfunctions
 import os.path
 import math
 import sys
+import itertools
+import datetime
 
 # Define some usefull functions
 def clamp(x, low, high):
@@ -101,4 +103,26 @@ def clone_subset(x, dtype):
     for name in dtype.names:
         new[name] = x[name]
     return new
+
+
         
+def numpy_to_messages(arr):
+    def convert_row(row):
+        res = {name:row[name] for name in row.dtype.names}
+        res['timestamp'] = datetime.datetime.fromtimestamp(res['timestamp'])
+        return res
+    return (convert_row(row) for row in arr)
+
+def messages_to_numpy(messages, length):
+    peek, messages = itertools.tee(messages, 2)
+    columns = peek.next().keys()
+    res = numpy.zeros(length, dtype = [(name, 'f8') for name in columns])
+    for message in messages:
+        for column in columns:
+            val = message.get(column, None)
+            if isinstance(val, datetime.datetime):
+                val = float(val.strftime("%s"))
+            elif isinstance(val, datetime.timedelta):
+                val = val.total_seconds()
+            res[column] = val
+    return res
