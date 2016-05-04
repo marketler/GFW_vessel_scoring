@@ -9,7 +9,7 @@ cols = ["lat", "lon", "classification","distance_to_port","distance_to_shore","m
 
 length = 0
 
-with gpsdio.open(sys.argv[1]) as f:
+with gpsdio.open(sys.argv[1], skip_failures=True) as f:
      for row in f:
           length += 1
 
@@ -19,7 +19,7 @@ x = numpy.zeros(length, dtype=[(name, "f8") for name in cols + ['mmsi']])
 segids = {}
 segid_counter = 0
 
-with gpsdio.open(sys.argv[1]) as f:
+with gpsdio.open(sys.argv[1], skip_failures=True) as f:
      for rownum, row in enumerate(f):
           for col in cols:
                val = row.get(col, numpy.Infinity)
@@ -27,7 +27,7 @@ with gpsdio.open(sys.argv[1]) as f:
                     val = float(val.strftime("%s"))
                x[col][rownum] = val
 
-          val = row['mmsi']
+          val = float(row['mmsi'])
           if 'seg_id' in row:
                seg_id = row['seg_id']
                if seg_id not in segids:
