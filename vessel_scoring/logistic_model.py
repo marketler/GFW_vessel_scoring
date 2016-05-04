@@ -1,7 +1,7 @@
 import numpy as np
 from sklearn.linear_model import LogisticRegression
 from vessel_scoring.utils import get_polynomial_cols, zigmoid
-
+import vessel_scoring.base_model
 
 def make_features(data, windows, order, cross):
     base = np.array(get_polynomial_cols(data, windows))
@@ -25,7 +25,7 @@ def make_features(data, windows, order, cross):
     return np.concatenate(chunks, axis=1)
 
 
-class LogisticModel(LogisticRegression):
+class LogisticModel(LogisticRegression, vessel_scoring.base_model.BaseModel):
 
     def __init__(self, coef=None, intercept=None, order=4, cross=0,
                         windows=['3600'], random_state=4321):
@@ -68,7 +68,7 @@ class LogisticModel(LogisticRegression):
         """Convert dataset into feature matrix suitable for model"""
         return make_features(data, self.windows, self.order, self.cross)
 
-    def dump_dict(self):
+    def dump_arg_dict(self):
         return {'coef' : [list(item) for item in self.coef_],
                 'intercept' : list(self.intercept_),
                 'windows' : list(self.windows),
@@ -77,7 +77,7 @@ class LogisticModel(LogisticRegression):
 
 
 
-class LogisticScorer:
+class LogisticScorer(vessel_scoring.base_model.BaseModel):
     """
     Reimplementation of the prediction part of Sklearn's LogisticRegression
     class. Idea is that we can optimize it once we stuff it in the pipe
