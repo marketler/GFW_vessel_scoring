@@ -39,6 +39,11 @@ with gpsdio.open(sys.argv[1], skip_failures=True) as f:
                val += float("0.%s1" % segid_counter)
           x['mmsi'][rownum] = val
 
+x = x[numpy.isnan(x['speed']) == False]
+x = x[numpy.isnan(x['course']) == False]
+
+x = x[numpy.argsort(x['timestamp'])]
+
 numpy.savez_compressed(
     sys.argv[2],
     x=x)
