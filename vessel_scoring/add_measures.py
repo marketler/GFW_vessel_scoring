@@ -15,12 +15,13 @@ def append_field_if_new(x, name):
 
 
 def add_measures(x, windowSizes=[1800, 3600, 10800, 21600, 43200, 86400],
-                 unscaled=[], verbose=True, err=sys.stderr):
+                 verbose=True, err=sys.stderr):
     """
 
     unscaled - MMSI of Kristina's data that has speeds in 1/10 knots and
                course in 1/10 degree.
     """
+
     x = x[x['course'] != Inf]
     x = x[x['speed'] != Inf]
 
@@ -31,14 +32,6 @@ def add_measures(x, windowSizes=[1800, 3600, 10800, 21600, 43200, 86400],
     x = append_field_if_new(x, 'measure_course')
     x = append_field_if_new(x, 'cos_course')
     x = append_field_if_new(x, 'sin_course')
-
-    if unscaled:
-        mask = zeros([len(x)], dtype=bool)
-        for m in unscaled:
-            mask |= (m == x['mmsi'])
-        for name in x.dtype.names:
-            if ('course' in name) or ('speed' in name):
-                x[name][mask] /= 10
 
     # Normalize speed and heading
     speed = x['speed'] / 17.0
