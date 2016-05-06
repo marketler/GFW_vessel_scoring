@@ -132,5 +132,5 @@ def messages_to_numpy(messages, length, columns=None, peek_ahead=1000):
                 val = float(val.strftime("%s"))
             elif isinstance(val, datetime.timedelta):
                 val = val.total_seconds()
-            res[i][column] = val
+            res[column][i] = val
     return res
