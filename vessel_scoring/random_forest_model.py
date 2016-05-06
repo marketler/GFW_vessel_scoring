@@ -1,9 +1,9 @@
 import numpy as np
 from sklearn.ensemble import RandomForestClassifier
 from vessel_scoring.utils import get_polynomial_cols
+import vessel_scoring.base_model
 
-
-class RandomForestModel(RandomForestClassifier):
+class RandomForestModel(RandomForestClassifier, vessel_scoring.base_model.BaseModel):
 
     def __init__(self, windows=['3600'], random_state=4321,
                         n_estimators=200):

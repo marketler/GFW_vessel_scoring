@@ -4,11 +4,14 @@ import vessel_scoring.logistic_model
 import vessel_scoring.utils
 import vessel_scoring.data
 import vessel_scoring.evaluate_model
+import vessel_scoring.add_measures
 
 import json
 import os.path
 import numpy
 import importlib
+import datetime
+
 
 untrained_models = [
     ('Logistic',               vessel_scoring.logistic_model.LogisticModel(windows=[43200], order=6)),

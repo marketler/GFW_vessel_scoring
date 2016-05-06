@@ -1,5 +1,6 @@
 import numpy as np
 from vessel_scoring.utils import get_cols_by_name
+import vessel_scoring.base_model
 
 COURSE_STD = 0
 SPEED_STD = 1
@@ -7,7 +8,7 @@ SPEED_AVG = 2
 SHORE_DIST = 3
 
 # TODO: make this inherit from appropriate sklearn classes
-class LegacyHeuristicModel:
+class LegacyHeuristicModel(vessel_scoring.base_model.BaseModel):
 
     def __init__(self, window='3600'):
         """
