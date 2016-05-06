@@ -19,7 +19,7 @@ if len(sys.argv) == 4:
 # Sort by mmsi, then by timestamp
 orig = orig[np.lexsort((orig['timestamp'], orig['mmsi']))]
 messages = vessel_scoring.utils.numpy_to_messages(orig)
-messages = vessel_scoring.add_measures.AddMeasures(messages, windows=[43200])
+messages = vessel_scoring.add_measures.AddMeasures(messages)
 res = vessel_scoring.utils.messages_to_numpy(messages, len(orig))
 
 numpy.savez_compressed(sys.argv[2], x=res)

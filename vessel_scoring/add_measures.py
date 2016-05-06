@@ -102,10 +102,6 @@ class AddWindowMeasures(object):
         for key, value in s.items():
             if 'stddev' in key:
                 s[key + "_log"] = float(numpy.log10(value + EPSILON))
-#                 if value == 0.0:
-#                     s[key + "_log"] = float(numpy.finfo(numpy.dtype("f4")).min)
-#                 else:
-#                     s[key + "_log"] = float(numpy.log10(value))
 
         self.end.update(s)
 
@@ -128,6 +124,11 @@ class AddWindowMeasures(object):
 
     def process(self):
         for self.endidx, self.end in self.endIn:
+            if (self.end.get('course') is None or
+                self.end.get('speed') is None or
+                self.end.get('timestamp') is None):
+                yield self.end
+                continue
 
             if (not self.current_track or
                     self.end.get('mmsi', None) != self.current_track.get('mmsi', None) or
@@ -144,7 +145,12 @@ class AddWindowMeasures(object):
                        or self.end['timestamp'] - self.start['timestamp'] > self.window_size):
                     if self.start:
                         self.stats.remove(self.start)
+
                     self.startidx, self.start = self.startIn.next()
+                    while (self.start.get('course') is None or
+                           self.start.get('speed') is None or
+                           self.start.get('timestamp') is None):
+                        self.startidx, self.start = self.startIn.next()
 
             self.add_measures_to_row()
 
@@ -202,43 +208,9 @@ class AddPairMeasures(object):
 
 
 def AddMeasures(messages, windows = [1800, 3600, 10800, 21600, 43200, 86400]):
-    filtered = (msg for msg in messages if msg.get('course') is not None and
-                                           msg.get('speed') is not None and
-                                           msg.get('timestamp') is not None)
-
-    filtered = AddNormalizedMeasures(filtered)
-
-    for window_size in windows:
-        filtered = AddWindowMeasures(filtered, datetime.timedelta(seconds=window_size))
-
-    return filtered
-
-def AddMeasuresComplex(messages, windows = [1800, 3600, 10800, 21600, 43200, 86400]):
-    # If we need to keep all of the elements in the sequence, something
-    # like this (untested) might work. Might be better to modify
-    # rolling measures to ignore None values though.
-
     messages = AddNormalizedMeasures(messages)
 
-    # I'm sure there's a better way to do this using itertools.tee or some such
-    filtered = (msg for msg in messages if msg.get('course') is not None and
-                                           msg.get('speed') is not None and
-                                           msg.get('timestamp') is not None)
-
-    antifiltered = (msg for msg in messages if not (msg.get('course') is not None and
-                                           msg.get('speed') is not None and
-                                           msg.get('timestamp') is not None))
-
-    fields_ok = (msg.get('course') is not None and
-                  msg.get('speed') is not None and
-                  msg.get('timestamp') is not None for msg in messages)
-
-
     for window_size in windows:
-        filtered = AddWindowMeasures(filtered, datetime.timedelta(seconds=window_size))
+        messages = AddWindowMeasures(messages, datetime.timedelta(seconds=window_size))
 
-    for is_ok in fields_ok:
-        if is_ok:
-            yield filtered.next()
-        else:
-            yield antifiltered.next()
+    return messages
