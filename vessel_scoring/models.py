@@ -31,7 +31,7 @@ def get_default_training_data(transit_weight = 10):
     _, xtrain_lline, xcross_lline, xtest_lline = vessel_scoring.data.load_dataset_by_vessel('datasets/kristina_longliner.measures.npz')
     _, xtrain_pseine, xcross_pseine, xtest_pseine = vessel_scoring.data.load_dataset_by_vessel('datasets/kristina_ps.measures.npz')
 
-    _, xtrain_tran, xcross_tran, xtest_tran = vessel_scoring.data.load_dataset_by_vessel('datasets/slow-transits_scored.measures.npz', even_split=False)
+    _, xtrain_tran, xcross_tran, xtest_tran = vessel_scoring.data.load_dataset_by_vessel('datasets/slow-transits.measures.npz', even_split=False)
     xtrain_tran = vessel_scoring.utils.clone_subset(xtrain_tran, xtrain_trawl.dtype)
     xcross_tran = vessel_scoring.utils.clone_subset(xcross_tran, xtrain_trawl.dtype)
     xtest_tran = vessel_scoring.utils.clone_subset(xtest_tran, xtrain_trawl.dtype)
@@ -57,10 +57,7 @@ def train_models(models = None, train = None, save=True):
             if hasattr(model, 'dump_dict'):
                 with open(os.path.join(models_path, "%s.json" % name), "w") as f:
                     model_class = type(model)
-                    json.dump({'model': "%s.%s" % (model_class.__module__, model_class.__name__),
-                               'args': model.dump_dict(),
-                               },
-                              f)
+                    json.dump(model.dump_dict(), f)
     return trained_models
 
 
