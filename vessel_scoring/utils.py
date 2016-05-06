@@ -117,20 +117,19 @@ def numpy_to_messages(arr):
         return res
     return (convert_row(row) for row in arr)
 
-def messages_to_numpy(messages, length, columns=None, peek_ahead=1000):
-    if columns is None:
-        peek, messages = itertools.tee(messages, 2)
-        columns = set()
-        for x in itertools.islice(peek, 0, peek_ahead):
-            columns.update(x.keys())
-        columns = sorted(columns)
-    res = numpy.zeros(length, dtype = [(name, 'f8') for name in columns])
+def messages_to_numpy(messages, length):
+    fields = {}
     for i, message in enumerate(messages):
-        for column in columns:
-            val = message.get(column, None)
+        for name, val in message.iteritems():
             if isinstance(val, datetime.datetime):
                 val = float(val.strftime("%s"))
             elif isinstance(val, datetime.timedelta):
                 val = val.total_seconds()
-            res[column][i] = val
+            if name not in fields:
+                fields[name] = numpy.zeros(length)
+                fields[name][:] = numpy.nan
+            fields[name][i] = val
+    res = numpy.zeros(length, dtype = [(name, 'f8') for name in fields])
+    for name in fields:
+        res[name][:] = fields[name]
     return res

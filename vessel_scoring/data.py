@@ -18,8 +18,7 @@ def load_dataset(path, size = 20000):
     #   exponentially distributed
 
     x = np.load(path)['x']
-
-    x = x[np.isinf(x['classification']) != True]
+    x = x[~np.isinf(x['classification']) & ~np.isnan(x['classification']) & ~np.isnan(x['timestamp']) & ~np.isnan(x['speed']) & ~np.isnan(x['course'])]
 
     all_windows = get_windows(x)
 
@@ -137,7 +136,7 @@ def load_dataset_by_vessel(path, size = 20000, even_split=True, seed=4321):
     # Load the dataset and strip out any points that aren't classified
     # (has classification == Inf)
     x = np.load(path)['x']
-    x = x[~np.isinf(x['classification'])]
+    x = x[~np.isinf(x['classification']) & ~np.isnan(x['classification']) & ~np.isnan(x['timestamp']) & ~np.isnan(x['speed']) & ~np.isnan(x['course'])]
 
     if size > len(x):
         print "Warning, insufficient items to sample, returning all"
@@ -161,6 +160,8 @@ def load_dataset_by_vessel(path, size = 20000, even_split=True, seed=4321):
     nx = len(x)
     sums = np.cumsum([(x['mmsi'] == m).sum() for m in mmsi])
     n1, n2 = np.searchsorted(sums, [nx//2, 3*nx//4])
+    if n2 == n1:
+        n2 += 1
 
     train_subsample = _subsample_even if even_split else _subsample_proportional
 
