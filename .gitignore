@@ -11,3 +11,6 @@ classification-hourlyResultsAll.txt
 datasets/
 env/
 .ipynb_checkpoints
+MANIFEST
+build/
+dist/
