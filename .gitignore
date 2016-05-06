@@ -10,3 +10,7 @@ classification-hourlyResultsAll.txt
 *.msg
 datasets/
 env/
+.ipynb_checkpoints
+MANIFEST
+build/
+dist/

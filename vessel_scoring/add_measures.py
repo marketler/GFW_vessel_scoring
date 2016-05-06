@@ -2,6 +2,7 @@
 Vessel statistics
 """
 
+import sys
 import datetime
 import itertools
 import numpy
