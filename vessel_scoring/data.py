@@ -61,8 +61,10 @@ def _subsample_even(x0, mmsi, n):
     # Pick half the values from fishy rows and half from nonfishy rows.
     f = fishy(x)
     nf = nonfishy(x)
-    f = np.random.choice(f, n//2, replace=False)
-    nf = np.random.choice(nf, n//2, replace=False)
+    if n//2 > len(f) or n//2 > len(nf):
+        print "Warning, inufficient items to sample, returning fewer"
+    f = np.random.choice(f, min(n//2, len(f)), replace=False)
+    nf = np.random.choice(nf, min(n//2, len(nf)), replace=False)
     ss = np.concatenate([f, nf])
     np.random.shuffle(ss)
     return ss
@@ -81,6 +83,7 @@ def _subsample_proportional(x0, mmsi, n):
     for m in mmsi:
         mask |= (x0['mmsi'] == m)
     x = x0[mask]
+    # Pick values randomly
     # Pick values randomly
     if n > len(x):
         print "Warning, inufficient items to sample, returning", len(x)
@@ -134,21 +137,26 @@ def load_dataset_by_vessel(path, size = 20000, even_split=True, seed=4321):
     # Load the dataset and strip out any points that aren't classified
     # (has classification == Inf)
     x = np.load(path)['x']
-    x = x[np.isinf(x['classification']) != True]
+    x = x[~np.isinf(x['classification'])]
 
     if size > len(x):
         print "Warning, insufficient items to sample, returning all"
         size = len(x)
 
-
-    # For each window name ('3600', '10800', etc) add log versions of
-    # the stddev values.
-    x = add_log_measures(x)
-
     # Get the list of MMSI and shuffle them. The compute the cumulative
     # lengths so that we can divide the points ~ evenly. Use search
     # sorted to find the division points
     mmsi = list(set(x['mmsi']))
+    if even_split:
+        base_mmsi = mmsi
+        # Exclude mmsi that don't have at least one fishing or nonfishing point
+        mmsi = []
+        for m in base_mmsi:
+            subset = x[x['mmsi'] == m]
+            fishing_count = subset['classification'].sum()
+            if fishing_count == 0 or fishing_count == len(subset):
+                continue
+            mmsi.append(m)
     np.random.shuffle(mmsi)
     nx = len(x)
     sums = np.cumsum([(x['mmsi'] == m).sum() for m in mmsi])

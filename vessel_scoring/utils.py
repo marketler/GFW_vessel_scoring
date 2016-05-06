@@ -105,24 +105,32 @@ def clone_subset(x, dtype):
     return new
 
 
-        
+
 def numpy_to_messages(arr):
     def convert_row(row):
         res = {name:row[name] for name in row.dtype.names}
-        res['timestamp'] = datetime.datetime.fromtimestamp(res['timestamp'])
+        for key, value in res.items():
+            if np.isnan(value) or np.isinf(value):
+                res[key] = None
+        if res.get('timestamp') is not None:
+            res['timestamp'] = datetime.datetime.fromtimestamp(res['timestamp'])
         return res
     return (convert_row(row) for row in arr)
 
-def messages_to_numpy(messages, length):
-    peek, messages = itertools.tee(messages, 2)
-    columns = peek.next().keys()
+def messages_to_numpy(messages, length, columns=None, peek_ahead=1000):
+    if columns is None:
+        peek, messages = itertools.tee(messages, 2)
+        columns = set()
+        for x in itertools.islice(peek, 0, peek_ahead):
+            columns.update(x.keys())
+        columns = sorted(columns)
     res = numpy.zeros(length, dtype = [(name, 'f8') for name in columns])
-    for message in messages:
+    for i, message in enumerate(messages):
         for column in columns:
             val = message.get(column, None)
             if isinstance(val, datetime.datetime):
                 val = float(val.strftime("%s"))
             elif isinstance(val, datetime.timedelta):
                 val = val.total_seconds()
-            res[column] = val
+            res[i][column] = val
     return res
