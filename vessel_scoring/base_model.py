@@ -8,11 +8,14 @@ class BaseModel(object):
     #     return model
 
     def predict_messages(self, messages):
-        for message in AddMeasures(messages, self.windows):
-            msg['measure_new_score'] = float(self.model.predict_proba({
-                        key: [value]
-                        for key, value in msg.iteritems()
-                        })[0][1])
+        for msg in vessel_scoring.add_measures.AddMeasures(messages, self.windows):
+            if (msg.get('timestamp', None) is not None and
+                msg.get('speed', None) is not None and
+                msg.get('course', None) is not None):
+                msg['measure_new_score'] = float(self.predict_proba({
+                            key: [value]
+                            for key, value in msg.iteritems()
+                            })[0][1])
             yield msg
         
     def dump_arg_dict(self):
