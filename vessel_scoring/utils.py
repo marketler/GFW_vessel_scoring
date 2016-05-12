@@ -133,3 +133,8 @@ def messages_to_numpy(messages, length):
     for name in fields:
         res[name][:] = fields[name]
     return res
+
+def concatenate_different_recarrays(arrs):
+    names = list(set.intersection(*[set(arr.dtype.names) for arr in arrs]))
+    return numpy.concatenate([arr[names] for arr in arrs])
+            
