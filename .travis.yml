@@ -20,4 +20,10 @@ python:
 
 install:
   - pip install pip setuptools wheel --upgrade
-  - pip install -e .
+  - pip install -e .\[dev\]
+
+script:
+  - python -c "import vessel_scoring"
+
+after_success:
+  - coveralls || echo "!! intermittent coveralls failure"

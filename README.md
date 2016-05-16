@@ -1,5 +1,7 @@
 [![Build Status](https://travis-ci.org/GlobalFishingWatch/vessel-scoring.svg?branch=master)](https://travis-ci.org/GlobalFishingWatch/vessel-scoring)
 
+[![Coverage Status](https://coveralls.io/repos/github/GlobalFishingWatch/vessel-scoring/badge.svg?branch=master)](https://coveralls.io/github/GlobalFishingWatch/vessel-scoring?branch=master)
+
 # About
 This repository contains fishing scoring heuristics and evaluation of their effectiveness,
 as well as development of supervised-ML scoring algorithms.
