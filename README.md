@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/GlobalFishingWatch/vessel-scoring.svg?branch=master)](https://travis-ci.org/GlobalFishingWatch/vessel-scoring)
+
 # About
 This repository contains fishing scoring heuristics and evaluation of their effectiveness,
 as well as development of supervised-ML scoring algorithms.
