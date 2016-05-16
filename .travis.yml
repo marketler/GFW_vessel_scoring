@@ -11,8 +11,7 @@ addons:
       - ubuntu-toolchain-r-test
     packages:
       - libfreetype6-dev
-      - libatlas-base-dev
-      - libatlas3-base
+      - libatlas-dev
       - gfortran
 
 python:
