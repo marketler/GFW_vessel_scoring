@@ -42,8 +42,11 @@ distutils.core.setup(
     packages=[
         'vessel_scoring',
     ],
-    package_data={'vessel_scoring': ['models/*']},
-    install_requires=["numpy", "scikit_learn", "scipy", "matplotlib", "ipython"],
+    package_data={
+        'vessel_scoring': ['models/*']},
+    install_requires=["numpy", "scikit-learn", "scipy"],
+    extras_require={
+        'evaluate': ["matplotlib", "ipython"]},
     version='1.0',
     author='Egil Moeller, Timothy Hochberg',
     author_email='egil@skytruth.org, tim@skytruth.org',
