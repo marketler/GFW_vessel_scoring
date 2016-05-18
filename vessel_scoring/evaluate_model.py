@@ -1,9 +1,5 @@
-import matplotlib.pyplot as plt
 from vessel_scoring import utils
-import numpy as np
 from sklearn import metrics
-from IPython.core.display import display, HTML
-
 
 
 def train_model(model, train_data):
@@ -22,12 +18,17 @@ def train_model(model, train_data):
 
 # TODO break this into a plotting and a text part
 def evaluate_model(model, test_data, name=None):
-    """Plot some graphs and compute some metrics on a model
+    """Plot some graphs and compute some metrics on a model.  Requires
+    matplotlib and IPython.
 
     model - a trained model
     test_data - data to use on the evalutions
 
     """
+
+    import matplotlib.pyplot as plt
+    from IPython.core.display import display, HTML
+
     is_fishy = utils.is_fishy(test_data)
 
     score = model.predict_proba(test_data)[:,1]
@@ -90,6 +91,7 @@ def evaluate_model(model, test_data, name=None):
     non_overlap = sum(abs(new_score_fishy[0] - new_score_nonfishy[0]))
     overlap = total - non_overlap
     error = overlap / total
+
 
 def compare_models(models, test_data):
     is_fishy = utils.is_fishy(test_data)
