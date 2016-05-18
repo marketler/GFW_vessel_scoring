@@ -44,7 +44,7 @@ distutils.core.setup(
     ],
     package_data={
         'vessel_scoring': ['models/*']},
-    install_requires=["numpy", "scikit-learn", "scipy"],
+    install_requires=["numpy", "scikit-learn", "scipy", "rolling_measures"],
     extras_require={
         'dev': ['matplotlib', 'ipython', 'coveralls']},
     version='1.0',
