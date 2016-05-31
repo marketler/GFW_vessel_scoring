@@ -5,6 +5,7 @@ import vessel_scoring.utils
 import vessel_scoring.data
 import vessel_scoring.evaluate_model
 import vessel_scoring.add_measures
+import vessel_scoring.colspec
 
 import json
 import os.path
@@ -14,20 +15,34 @@ import datetime
 
 
 all_data = ['kristina_trawl', 'kristina_longliner', 'kristina_ps'] + ['slow-transits'] * 10
+colspec={"windows": vessel_scoring.colspec.Colspec.windows}
+
 untrained_models = {
-    'Logistic':               {'model': vessel_scoring.logistic_model.LogisticModel(windows=[43200], order=6), 'data': all_data},
+    'Logistic':               {'model': vessel_scoring.logistic_model.LogisticModel(colspec=colspec, order=6), 'data': all_data},
 
-    'Logistic--Longliner':    {'model': vessel_scoring.logistic_model.LogisticModel(windows=[43200], order=6),
+    'Logistic--Longliner':    {'model': vessel_scoring.logistic_model.LogisticModel(colspec=colspec, order=6),
                                'data': ['kristina_longliner'] + ['slow-transits'] * 10},
-    'Logistic--Trawler':      {'model': vessel_scoring.logistic_model.LogisticModel(windows=[43200], order=6),
+    'Logistic--Trawler':      {'model': vessel_scoring.logistic_model.LogisticModel(colspec=colspec, order=6),
                                'data': ['kristina_trawl'] + ['slow-transits'] * 10},
-    'Logistic--Purse seine':  {'model': vessel_scoring.logistic_model.LogisticModel(windows=[43200], order=6),
-                               'data': ['kristina_ps'] + ['slow-transits'] * 10},
 
-    'Logistic opt MSE':       {'model': vessel_scoring.logistic_model.LogisticModel(windows=[43200], order=4, cross=3), 'data': all_data},
-    'Random Forest':          {'model': vessel_scoring.random_forest_model.RandomForestModel(windows=[43200]), 'data': all_data},
+    'Logistic--Purse seine OLD': {'model': vessel_scoring.logistic_model.LogisticModel(colspec=colspec, order=6),
+                                  'data': ['kristina_ps'] + ['slow-transits'] * 10},
+
+    'Logistic--Purse seine':  {
+        'model': vessel_scoring.logistic_model.LogisticModel(
+            colspec={
+                "windows": vessel_scoring.colspec.Colspec.windows,
+                "window_measures": vessel_scoring.colspec.Colspec.window_measures + ["measure_daylightavg"],
+                "measures": vessel_scoring.colspec.Colspec.measures + ["measure_daylight"]
+                },
+            order=6),
+        'data': ['kristina_ps'] + ['slow-transits'] * 10},
+
+    'Logistic opt MSE':       {'model': vessel_scoring.logistic_model.LogisticModel(colspec=colspec, order=4, cross=3), 'data': all_data},
+    'Random Forest':          {'model': vessel_scoring.random_forest_model.RandomForestModel(windows=vessel_scoring.colspec.Colspec.windows), 'data': all_data},
     'Legacy':                 {'model': vessel_scoring.legacy_heuristic_model.LegacyHeuristicModel(window=3600), 'data': all_data},
     "Legacy (12 Hour)":       {'model': vessel_scoring.legacy_heuristic_model.LegacyHeuristicModel(window=43200), 'data': all_data},
+
 #     'Logistic (MW)':        {'model': vessel_scoring.logistic_model.LogisticModel(windows=[1800, 3600, 10800, 21600, 43200, 86400], order=6), 'data': all_data},
 #     'Logistic (MW/cross3)': {'model': vessel_scoring.logistic_model.LogisticModel(windows=[1800, 3600, 10800, 21600, 43200, 86400], order=6, cross=2), 'data': all_data},
 #     'Random Forest (MW)':   {'model': vessel_scoring.random_forest_model.RandomForestModel(windows=[1800, 3600, 10800, 21600, 43200, 86400]), 'data': all_data},

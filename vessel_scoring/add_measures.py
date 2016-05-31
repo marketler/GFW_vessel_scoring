@@ -9,6 +9,36 @@ import numpy
 import rolling_measures
 
 
+# XXX test!
+def hours_per_day(latitude, day_of_year):
+    # From https://www.quora.com/How-can-you-calculate-the-length-of-the-day-on-Earth-at-a-given-latitude-on-a-given-date-of-the-year
+    latitude = numpy.radians(latitude)
+    # compute declination using approx from
+    # https://en.wikipedia.org/wiki/Position_of_the_Sun
+    # XXX check that day_of_year is correcly 0 or 1 referenced
+    delta = -23.44 * numpy.cos(numpy.radians((360 / 365) * (day_of_year + 10)))
+    cosh = -numpy.tan(latitude) * numpy.tan(delta)
+    fill = (1 + numpy.sign(cosh)) * 90 # 0 or 180 depending on sign of cosh
+    h = numpy.where(abs(cosh) > 1, fill, numpy.arccos(cosh))
+    return 2 * h / 15
+
+def daylight(longitude, latitude, timestamp):
+    daylight = hours_per_day(latitude, timestamp.timetuple().tm_yday - 1)
+
+    local_time = timestamp + datetime.timedelta(longitude / 360.0)
+    noon = datetime.datetime.combine(local_time.date(), datetime.time(12, 0, 0))
+
+    hours_from_noon = abs((local_time - noon).total_seconds() / 60.0 / 60.0)
+
+    return daylight / 2 > hours_from_noon
+
+
+def AddPointMeasures(messages):
+    for msg in messages:
+        if msg.get('lat', None) is not None and msg.get('lon', None) is not None and msg.get('timestamp', None) is not None:
+            msg['measure_daylight'] = [0, 1][daylight(msg['lon'], msg['lat'], msg['timestamp'])]
+        yield msg
+
 def AddNormalizedMeasures(messages):
     for row in messages:
         heading = row.get('heading')
@@ -109,7 +139,8 @@ class AddWindowMeasures(object):
         self.current_track = self.end
         self.prev = None
         self.stats = rolling_measures.Stats({
-            'measure_coursestddev' : rolling_measures.StatSum(
+            "measure_daylightavg": rolling_measures.Stat("measure_daylight", rolling_measures.Avg),
+            "measure_coursestddev": rolling_measures.StatSum(
                 rolling_measures.Stat("measure_cos_course", rolling_measures.StdDev),
                 rolling_measures.Stat("measure_sin_course", rolling_measures.StdDev)),
             "measure_speedstddev": rolling_measures.Stat("measure_speed", rolling_measures.StdDev),
@@ -208,6 +239,8 @@ class AddPairMeasures(object):
 
 
 def AddMeasures(messages, windows = [1800, 3600, 10800, 21600, 43200, 86400]):
+    messages = AddPointMeasures(messages)
+
     messages = AddNormalizedMeasures(messages)
 
     for window_size in windows:
