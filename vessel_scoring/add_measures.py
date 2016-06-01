@@ -9,28 +9,28 @@ import numpy
 import rolling_measures
 
 
-# XXX test!
 def hours_per_day(latitude, day_of_year):
     # From https://www.quora.com/How-can-you-calculate-the-length-of-the-day-on-Earth-at-a-given-latitude-on-a-given-date-of-the-year
     latitude = numpy.radians(latitude)
     # compute declination using approx from
     # https://en.wikipedia.org/wiki/Position_of_the_Sun
     # XXX check that day_of_year is correcly 0 or 1 referenced
-    delta = -23.44 * numpy.cos(numpy.radians((360 / 365) * (day_of_year + 10)))
+    delta = numpy.radians(-23.44 * numpy.cos(numpy.radians((360.0 / 365.0) * (day_of_year + 10.0))))
     cosh = -numpy.tan(latitude) * numpy.tan(delta)
-    fill = (1 + numpy.sign(cosh)) * 90 # 0 or 180 depending on sign of cosh
+    fill = (1.0 + numpy.sign(cosh)) * 90.0 # 0 or 180 depending on sign of cosh
     h = numpy.where(abs(cosh) > 1, fill, numpy.arccos(cosh))
-    return 2 * h / 15
+    return 2.0 * numpy.degrees(h) / 15.0
 
 def daylight(longitude, latitude, timestamp):
-    daylight = hours_per_day(latitude, timestamp.timetuple().tm_yday - 1)
+    day_of_year = timestamp.timetuple().tm_yday - 1
+    daylight = hours_per_day(latitude, day_of_year)
 
     local_time = timestamp + datetime.timedelta(longitude / 360.0)
     noon = datetime.datetime.combine(local_time.date(), datetime.time(12, 0, 0))
 
     hours_from_noon = abs((local_time - noon).total_seconds() / 60.0 / 60.0)
 
-    return daylight / 2 > hours_from_noon
+    return daylight / 2.0 > hours_from_noon
 
 
 def AddPointMeasures(messages):
