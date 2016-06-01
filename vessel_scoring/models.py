@@ -25,8 +25,8 @@ untrained_models = {
     'Logistic--Trawler':      {'model': vessel_scoring.logistic_model.LogisticModel(colspec=colspec, order=6),
                                'data': ['kristina_trawl'] + ['slow-transits'] * 10},
 
-    'Logistic--Purse seine OLD': {'model': vessel_scoring.logistic_model.LogisticModel(colspec=colspec, order=6),
-                                  'data': ['kristina_ps'] + ['slow-transits'] * 10},
+    # 'Logistic--Purse seine OLD': {'model': vessel_scoring.logistic_model.LogisticModel(colspec=colspec, order=6),
+    #                               'data': ['kristina_ps'] + ['slow-transits'] * 10},
 
     'Logistic--Purse seine':  {
         'model': vessel_scoring.logistic_model.LogisticModel(
@@ -58,7 +58,8 @@ def load_data():
             datasets[name] = dict(zip(['all', 'train', 'cross', 'test'], vessel_scoring.data.load_dataset_by_vessel('datasets/' + filename)))
     return datasets
 
-def train_model(spec, dataset):
+def train_model(name, spec, dataset):
+    print "Training %s..." % name
     training_data = ([dataset[name]['train']
                       for name in spec['data']]
                      + [dataset[name]['cross']
@@ -73,7 +74,7 @@ def train_models(models = None, train = None, save=True):
         models = untrained_models
     if train is None:
         train = load_data()
-    trained_models = {name: train_model(spec, train)
+    trained_models = {name: train_model(name, spec, train)
                       for (name, spec) in models.iteritems()}
     if save:
         if not os.path.exists(models_path):

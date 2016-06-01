@@ -32,10 +32,14 @@ def daylight(longitude, latitude, timestamp):
 
     return daylight / 2.0 > hours_from_noon
 
+def localtime(longitude, timestamp):
+    local_timestamp = timestamp + datetime.timedelta(longitude / 360.0)
+    return (local_timestamp - datetime.datetime.combine(local_timestamp.date(), datetime.time(0, 0, 0))).total_seconds() / 60. / 60.
 
 def AddPointMeasures(messages):
     for msg in messages:
         if msg.get('lat', None) is not None and msg.get('lon', None) is not None and msg.get('timestamp', None) is not None:
+            # msg['measure_localtime'] = localtime(msg['lon'], msg['timestamp'])
             msg['measure_daylight'] = [0, 1][daylight(msg['lon'], msg['lat'], msg['timestamp'])]
         yield msg
 
