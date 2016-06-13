@@ -7,8 +7,8 @@ This repository contains fishing scoring heuristics and evaluation of their effe
 as well as development of supervised-ML scoring algorithms.
 
 ## Training data
-Training data for this project is too big to store in this repository. It will be licensed separately. If you have been given acces, the datacan be found here:
-https://drive.google.com/folderview?id=0B7rRlQvqnpGIZVpSSFJRakhMcFk&usp=sharing
+Training data for this project is too big to store in this repository. It will be licensed separately. If you have been given acces, the data can be found here:
+gs://vessel-scoring/datasets
 
 You do not need the training data to use the predition models as the trained model parameters are stored in the repository.
 
