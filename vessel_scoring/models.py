@@ -3,7 +3,6 @@ import vessel_scoring.random_forest_model
 import vessel_scoring.logistic_model
 import vessel_scoring.utils
 import vessel_scoring.data
-import vessel_scoring.evaluate_model
 import vessel_scoring.add_measures
 import vessel_scoring.colspec
 
@@ -33,9 +32,9 @@ untrained_models = {
             colspec={
                 "windows": vessel_scoring.colspec.Colspec.windows,
                 "window_measures": vessel_scoring.colspec.Colspec.window_measures + ["measure_daylightavg"],
-                "measures": vessel_scoring.colspec.Colspec.measures + ["measure_daylight"]
+                "measures": vessel_scoring.colspec.Colspec.measures + ["measure_speed", "measure_daylight"]
                 },
-            order=6),
+            order=3, cross=2),
         'data': ['kristina_ps'] + ['slow-transits'] * 10},
 
     'Logistic opt MSE':       {'model': vessel_scoring.logistic_model.LogisticModel(colspec=colspec, order=4, cross=3), 'data': all_data},
@@ -58,6 +57,21 @@ def load_data():
             datasets[name] = dict(zip(['all', 'train', 'cross', 'test'], vessel_scoring.data.load_dataset_by_vessel('datasets/' + filename)))
     return datasets
 
+
+
+def train_model_on_data(model, train_data):
+    """train `model` with `train_data`
+
+    example:
+
+    model = train_model_on_data(LogisticModel(colsec=dict(window=3600)), train_data)
+
+
+    """
+    y_train = vessel_scoring.utils.is_fishy(train_data)
+    model.fit(train_data, y_train)
+    return model
+
 def train_model(name, spec, dataset):
     print "Training %s..." % name
     training_data = ([dataset[name]['train']
@@ -65,7 +79,7 @@ def train_model(name, spec, dataset):
                      + [dataset[name]['cross']
                         for name in spec['data']])
     training_data = vessel_scoring.utils.concatenate_different_recarrays(training_data)
-    return vessel_scoring.evaluate_model.train_model(spec['model'], training_data)
+    return train_model_on_data(spec['model'], training_data)
 
 models_path = os.path.join(os.path.dirname(__file__), "models")
 

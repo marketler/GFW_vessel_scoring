@@ -91,7 +91,7 @@ class LogisticScorer(vessel_scoring.base_model.BaseModel):
         self.intercept = intercept
         self.order = order
         self.cross = cross
-        self.colspec = colspec
+        self.colspec = vessel_scoring.colspec.Colspec(**colspec)
 
     def predict(self, X):
         """predict is_fishing based on feature vector `X`"""

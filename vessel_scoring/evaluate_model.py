@@ -1,19 +1,7 @@
 from vessel_scoring import utils
 from sklearn import metrics
-
-
-def train_model(model, train_data):
-    """train `model` with `train_data`
-
-    example:
-
-    model = train_model(LogisticModel(window=3600), train_data)
-
-
-    """
-    y_train = utils.is_fishy(train_data)
-    model.fit(train_data, y_train)
-    return model
+import matplotlib.pyplot as plt
+from IPython.core.display import display, HTML
 
 def evaluate_model(model, test_data, name=None):
     evaluate_score(
@@ -30,9 +18,6 @@ def evaluate_score(score, test_data, name):
     test_data - data to use on the evalutions
 
     """
-
-    import matplotlib.pyplot as plt
-    from IPython.core.display import display, HTML
 
     is_fishy = utils.is_fishy(test_data)
 
