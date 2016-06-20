@@ -1,45 +1,32 @@
 from vessel_scoring import utils
 from sklearn import metrics
+import matplotlib.pyplot as plt
+from IPython.core.display import display, HTML
 
-
-def train_model(model, train_data):
-    """train `model` with `train_data`
-
-    example:
-
-    model = train_model(LogisticModel(window=3600), train_data)
-
-
-    """
-    y_train = utils.is_fishy(train_data)
-    model.fit(train_data, y_train)
-    return model
-
-
-# TODO break this into a plotting and a text part
 def evaluate_model(model, test_data, name=None):
-    """Plot some graphs and compute some metrics on a model.  Requires
+    evaluate_score(
+        model.predict_proba(test_data)[:,1],
+        test_data,
+        str(model) if (name is None) else name)
+
+
+def evaluate_score(score, test_data, name):
+    """Plot some graphs and compute some metrics on a set of predictions.  Requires
     matplotlib and IPython.
 
-    model - a trained model
+    score - model predictions, same length as test_data
     test_data - data to use on the evalutions
 
     """
 
-    import matplotlib.pyplot as plt
-    from IPython.core.display import display, HTML
-
     is_fishy = utils.is_fishy(test_data)
 
-    score = model.predict_proba(test_data)[:,1]
     score_fishy = score[is_fishy]
     score_nonfishy =  score[~is_fishy]
 
     precisions, recalls, thresholds = metrics.precision_recall_curve(is_fishy, score)
 
-
-    model_description = str(model) if (name is None) else name
-    display(HTML("<h1>%s</h1>" % model_description))
+    display(HTML("<h1>%s</h1>" % name))
 
     ylim = 15.0
 

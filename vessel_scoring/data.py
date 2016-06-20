@@ -110,7 +110,7 @@ def add_log_measures(x):
     return np.lib.recfunctions.append_fields(x, 'score', [],
                                     dtypes='<f8', fill_value=0.0)
 
-def load_dataset_by_vessel(path, size = 20000, even_split=True, seed=4321):
+def load_dataset_by_vessel(path, size = 20000, even_split=None, seed=4321):
     """Load a dataset from `path` and return train, valid and test sets
 
     path - path to the dataset
@@ -146,6 +146,8 @@ def load_dataset_by_vessel(path, size = 20000, even_split=True, seed=4321):
     # lengths so that we can divide the points ~ evenly. Use search
     # sorted to find the division points
     mmsi = list(set(x['mmsi']))
+    if even_split is None:
+        even_split = x['classification'].sum() > 1 and x['classification'].sum() < len(x)
     if even_split:
         base_mmsi = mmsi
         # Exclude mmsi that don't have at least one fishing or nonfishing point
@@ -165,8 +167,14 @@ def load_dataset_by_vessel(path, size = 20000, even_split=True, seed=4321):
 
     train_subsample = _subsample_even if even_split else _subsample_proportional
 
-    xtrain = train_subsample(x, mmsi[:n1], size//2)
-    xcross = _subsample_proportional(x, mmsi[n1:n2], size//4)
-    xtest = _subsample_proportional(x, mmsi[n2:], size//4)
+    try:
+        xtrain = train_subsample(x, mmsi[:n1], size//2)
+        xcross = _subsample_proportional(x, mmsi[n1:n2], size//4)
+        xtest = _subsample_proportional(x, mmsi[n2:], size//4)
+    except Exception, e:
+        print "Broken data in", path
+        import pdb, sys
+        sys.last_traceback = sys.exc_info()[2]
+        pdb.set_trace()
 
     return x, xtrain, xcross, xtest
