@@ -93,6 +93,7 @@ def compare_models(models, test_data):
     a1.set_xlabel('False Positive Rate')
     a1.set_ylabel('True Positive Rate')
     a1.legend(loc="lower right")
+    a1.set_ylim(0, 1)
 
     for (name, mdl) in models:
         score = mdl.predict_proba(test_data)[:,1]
@@ -101,5 +102,6 @@ def compare_models(models, test_data):
     a2.set_xlabel('Recall')
     a2.set_ylabel('Precision')
     a2.legend(loc="lower right")
+    a2.set_ylim(0, 1)
 
     plt.show()
