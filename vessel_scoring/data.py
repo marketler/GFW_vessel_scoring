@@ -4,6 +4,7 @@ import os.path
 import math
 import scipy.optimize
 import sys
+import warnings
 from vessel_scoring.utils import *
 
 def load_dataset(path, size = 20000):
@@ -61,7 +62,7 @@ def _subsample_even(x0, mmsi, n):
     f = fishy(x)
     nf = nonfishy(x)
     if n//2 > len(f) or n//2 > len(nf):
-        print "Warning, inufficient items to sample, returning fewer"
+        warnings.warn("inufficient items to sample, returning fewer")
     f = np.random.choice(f, min(n//2, len(f)), replace=False)
     nf = np.random.choice(nf, min(n//2, len(nf)), replace=False)
     ss = np.concatenate([f, nf])
@@ -85,7 +86,7 @@ def _subsample_proportional(x0, mmsi, n):
     # Pick values randomly
     # Pick values randomly
     if n > len(x):
-        print "Warning, inufficient items to sample, returning", len(x)
+        warnings.warn("Warning, inufficient items to sample, returning {}".format(len(x)))
         n = len(x)
     ss = np.random.choice(x, n, replace=False)
     np.random.shuffle(ss)
