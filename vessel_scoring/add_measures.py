@@ -143,6 +143,7 @@ class AddWindowMeasures(object):
         self.current_track = self.end
         self.prev = None
         self.stats = rolling_measures.Stats({
+            'measure_count' :  rolling_measures.Stat('measure_speed', rolling_measures.Count),
             "measure_daylightavg": rolling_measures.Stat("measure_daylight", rolling_measures.Avg),
             "measure_coursestddev": rolling_measures.StatSum(
                 rolling_measures.Stat("measure_cos_course", rolling_measures.StdDev),

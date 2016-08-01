@@ -10,11 +10,21 @@ import numpy as np
 
 orig = numpy.load(sys.argv[1])['x']
 
-if len(sys.argv) == 4:
+if len(sys.argv) >= 4:
     default = int(sys.argv[3])
     print "Replacing Infs and NaNs with", default
     is_missing = np.isnan(orig['classification']) | np.isinf(orig['classification'])
     orig['classification'][is_missing] = default
+    
+if len(sys.argv) >= 5:
+    np.random.seed(4321)
+    keep_prob = float(sys.argv[4])
+    print "Keeping points with probability", keep_prob
+    keep = np.random.random(size=len(orig)) < keep_prob
+    orig = orig[keep]
+
+if len(sys.argv) >= 6:
+    raise Value("too many arguments")
 
 # Sort by mmsi, then by timestamp
 orig = orig[np.lexsort((orig['timestamp'], orig['mmsi']))]
