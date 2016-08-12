@@ -12,8 +12,8 @@ import numpy
 import importlib
 import datetime
 
-
-all_data = ['kristina_trawl', 'kristina_longliner', 'kristina_ps'] + ['slow-transits'] * 10
+TRANSIT_WEIGHT = 10
+all_data = ['kristina_trawl', 'kristina_longliner', 'kristina_ps'] + ['slow-transits'] * TRANSIT_WEIGHT 
 colspec={"windows": vessel_scoring.colspec.Colspec.windows}
 
 untrained_models = {
@@ -42,19 +42,59 @@ untrained_models = {
     'Legacy':                 {'model': vessel_scoring.legacy_heuristic_model.LegacyHeuristicModel(window=3600), 'data': all_data},
     "Legacy (12 Hour)":       {'model': vessel_scoring.legacy_heuristic_model.LegacyHeuristicModel(window=43200), 'data': all_data},
 
-#     'Logistic (MW)':        {'model': vessel_scoring.logistic_model.LogisticModel(windows=[1800, 3600, 10800, 21600, 43200, 86400], order=6), 'data': all_data},
-#     'Logistic (MW/cross3)': {'model': vessel_scoring.logistic_model.LogisticModel(windows=[1800, 3600, 10800, 21600, 43200, 86400], order=6, cross=2), 'data': all_data},
-#     'Random Forest (MW)':   {'model': vessel_scoring.random_forest_model.RandomForestModel(windows=[1800, 3600, 10800, 21600, 43200, 86400]), 'data': all_data},
-#     "Legacy (3 Hour)":      {'model': vessel_scoring.legacy_heuristic_model.LegacyHeuristicModel(window=10800), 'data': all_data},
-#     "Legacy (24 Hour)":     {'model': vessel_scoring.legacy_heuristic_model.LegacyHeuristicModel(window=86400),   'data': all_data},
+
+    #### For notebooks/Compare models.ipynb ####
+    'Logistic (SW)': {'active': False, 'compare_models': True, 'model': vessel_scoring.logistic_model.LogisticModel(colspec=dict(windows=[43200]), order=6), 'data': all_data},
+    'Logistic (MW)': {'active': False, 'compare_models': True,
+                      'model': vessel_scoring.logistic_model.LogisticModel(colspec=dict(windows=vessel_scoring.colspec.Colspec.windows), order=6),
+                      'data': all_data},
+    'Logistic (MW)': {'active': False, 'compare_models': True,
+                      'model': vessel_scoring.logistic_model.LogisticModel(colspec=dict(windows=vessel_scoring.colspec.Colspec.windows), order=6),
+                      'data': all_data},
+    'Logistic (MW & daylight)': {'active': False, 'compare_models': True,
+                                 'model': vessel_scoring.logistic_model.LogisticModel(colspec=dict(windows=vessel_scoring.colspec.Colspec.windows,
+                                                                                                   measures=['measure_daylight']), order=6),
+                                 'data': all_data},
+    # Using `speed` here rather than `measure_speed` gives terrible results. Overflow? Just way too large?
+    'Logistic (MW & daylight & speed)': {'active': False, 'compare_models': True,
+                                         'model': vessel_scoring.logistic_model.LogisticModel(
+                                             colspec=dict(windows=vessel_scoring.colspec.Colspec.windows,
+                                                          measures=['measure_daylight', 'measure_speed']), order=6),
+                                         'data': all_data},
+    'Random Forest': {'active': False, 'compare_models': True,
+                      'model': vessel_scoring.random_forest_model.RandomForestModel(colspec=dict(windows=[43200])),
+                      'data': all_data},
+    'Random Forest (MW)': {'active': False, 'compare_models': True,
+                           'model': vessel_scoring.random_forest_model.RandomForestModel(colspec=dict(windows=vessel_scoring.colspec.Colspec.windows)),
+                           'data': all_data},
+    'Random Forest (MW & daylight)': {'active': False, 'compare_models': True,
+                                      'model': vessel_scoring.random_forest_model.RandomForestModel(colspec=dict(windows=vessel_scoring.colspec.Colspec.windows,
+                                                                                                                 measures=['measure_daylight'])),
+                                      'data': all_data},
+    'Random Forest (MW & daylight & speed)': {'active': False, 'compare_models': True, 'model': vessel_scoring.random_forest_model.RandomForestModel
+                                              (colspec=dict(windows=vessel_scoring.colspec.Colspec.windows,
+                                                            measures=['measure_daylight', 'speed'])),
+                                              'data': all_data},
+
+
+    #### Old models ####
+    'Logistic (MW/cross3)': {'active': False, 'model': vessel_scoring.logistic_model.LogisticModel(colspec=colspec, order=6, cross=2), 'data': all_data},
+    'Random Forest (MW)':   {'active': False,
+                             'model': vessel_scoring.random_forest_model.RandomForestModel(colspec=dict(windows=vessel_scoring.colspec.Colspec.windows)),
+                             'data': all_data},
+    'Legacy (3 Hour)':      {'active': False, 'model': vessel_scoring.legacy_heuristic_model.LegacyHeuristicModel(window=10800), 'data': all_data},
+    'Legacy (24 Hour)':     {'active': False, 'model': vessel_scoring.legacy_heuristic_model.LegacyHeuristicModel(window=86400),   'data': all_data},
 }
 
-def load_data():
+def load_data(dir = None):
+    if dir is None:
+        dir = os.path.join(os.path.dirname(__file__), '..', 'datasets')
+
     datasets = {}
-    for filename in os.listdir("datasets"):
+    for filename in os.listdir(dir):
         if filename.endswith('.measures.npz'):
             name = filename[:-len('.measures.npz')]
-            datasets[name] = dict(zip(['all', 'train', 'cross', 'test'], vessel_scoring.data.load_dataset_by_vessel('datasets/' + filename)))
+            datasets[name] = dict(zip(['all', 'train', 'cross', 'test'], vessel_scoring.data.load_dataset_by_vessel(os.path.join(dir, filename))))
     return datasets
 
 
@@ -89,7 +129,8 @@ def train_models(models = None, train = None, save=True):
     if train is None:
         train = load_data()
     trained_models = {name: train_model(name, spec, train)
-                      for (name, spec) in models.iteritems()}
+                      for (name, spec) in models.iteritems()
+                      if spec.get("active", True)}
     if save:
         if not os.path.exists(models_path):
             os.mkdir(models_path)
