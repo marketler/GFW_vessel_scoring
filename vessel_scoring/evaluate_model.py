@@ -1,7 +1,9 @@
 from vessel_scoring import utils
 from sklearn import metrics
 import matplotlib.pyplot as plt
-from IPython.core.display import display, HTML
+from IPython.core.display import display, HTML, Markdown
+import pandas
+import os.path
 
 def evaluate_model(model, test_data, name=None):
     evaluate_score(
@@ -79,11 +81,35 @@ def evaluate_score(score, test_data, name):
     overlap = total - non_overlap
     error = overlap / total
 
+def compare_models_at_cutoff(models, test_data, predictions = None):
+    if not predictions: predictions = {}
+
+    if isinstance(models, dict):
+        models = models.items()
+        models.sort(lambda a, b: cmp(a[0], b[0]))
+
+    for name, mdl in models:
+        predictions[name] = ((mdl.predict_proba(test_data)[:,1] > 0.5), test_data['classification'])
+
+    lines = ["|Model|Recall|Precision|F1-Score|",
+         "|-----|------|---------|--------|"]
+    for name in sorted(predictions):
+        pred, actual = predictions[name]
+        lines.append("|{}|{:.2f}|{:.2f}|{:.2f}|".format(
+                name, 
+                metrics.recall_score(actual, pred),
+                metrics.precision_score(actual, pred), 
+                metrics.f1_score(actual, pred)))
+    display(Markdown('\n'.join(lines)))
 
 def compare_models(models, test_data):
     is_fishy = utils.is_fishy(test_data)
 
     f, (a1, a2) = plt.subplots(2, 1, figsize=(20,20))
+
+    if isinstance(models, dict):
+        models = models.items()
+        models.sort(lambda a, b: cmp(a[0], b[0]))
 
     for (name, mdl) in models:
         score = mdl.predict_proba(test_data)[:,1]
@@ -105,3 +131,13 @@ def compare_models(models, test_data):
     a2.set_ylim(0, 1)
 
     plt.show()
+
+
+def load_dal_predictions(path):
+    if not os.path.exists(path):
+        raise IOError(path)
+    dal_res = pandas.read_csv(path)
+    mask = np.array([(x in test_mmsi) for x in dal_res['mmsi']]).astype(bool)
+    res = (dal_res.preds[mask], dal_res.classification[mask])
+    # Fix predictions for Trawler.py
+    return ([{'F': 1, 'N': 0}.get(x, x) for x in res[0]], res[1])
