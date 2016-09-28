@@ -96,6 +96,9 @@ class AddWindowMeasures(object):
             GPSd messages.
         window_size : datetime.timedelta, optional
             Size of window in seconds.
+        offset: float ]0, 1[
+            Offset from the end of the window (as a fraction) where
+            the row to add the measures to is located.
         """
         stream1, stream2, stream3 = itertools.tee(messages, 3)
         self.startIn = self.load_lines(stream1)
