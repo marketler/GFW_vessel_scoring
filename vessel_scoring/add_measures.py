@@ -86,8 +86,7 @@ class AddWindowMeasures(object):
     Requires two handles to the _same_ stream of messages for the two ends of the window.
     """
 
-    def __init__(self, messages, window_size=datetime.timedelta(seconds=60 * 60)):
-
+    def __init__(self, messages, window_size=datetime.timedelta(seconds=60 * 60), offset=0.0):
         """
         Iterate to get messages with additional measures.
 
@@ -98,12 +97,13 @@ class AddWindowMeasures(object):
         window_size : datetime.timedelta, optional
             Size of window in seconds.
         """
-
-        stream1, stream2 = itertools.tee(messages, 2)
+        stream1, stream2, stream3 = itertools.tee(messages, 3)
         self.startIn = self.load_lines(stream1)
-        self.endIn = self.load_lines(stream2)
+        self.middleIn = self.load_lines(stream2)
+        self.endIn = self.load_lines(stream3)
         self.current_track = None
         self.window_size = window_size
+        self.offset = offset
         self.startidx = -1
         self._iterator = None
 
@@ -121,7 +121,7 @@ class AddWindowMeasures(object):
         for idx, line in enumerate(in_file):
             yield idx, line
 
-    def add_measures_to_row(self):
+    def get_measures(self):
         s = self.stats.get()
         # Knots...
         s['measure_pos'] = (s['measure_pos'] * 60) / (self.window_size.total_seconds() / 60 / 60)
@@ -137,11 +137,10 @@ class AddWindowMeasures(object):
             if 'stddev' in key:
                 s[key + "_log"] = float(numpy.log10(value + EPSILON))
 
-        self.end.update(s)
+        return s
 
     def start_track(self):
-        self.current_track = self.end
-        self.prev = None
+        self.current_track = self.middle
         self.stats = rolling_measures.Stats({
             'measure_count' :  rolling_measures.Stat('measure_speed', rolling_measures.Count),
             "measure_daylightavg": rolling_measures.Stat("measure_daylight", rolling_measures.Avg),
@@ -158,41 +157,44 @@ class AddWindowMeasures(object):
                 rolling_measures.Stat("lon", rolling_measures.StdDev))
         })
 
+    def row_in_current_track(self, row):
+        return (self.current_track and
+                row.get('mmsi', None) == self.current_track.get('mmsi', None) and
+                row.get('seg_id', None) == self.current_track.get('seg_id', None))
+
     def process(self):
-        for self.endidx, self.end in self.endIn:
-            if (self.end.get('course') is None or
-                self.end.get('speed') is None or
-                self.end.get('timestamp') is None):
-                yield self.end
-                continue
+        for self.middleidx, self.middle in self.middleIn:
+            if (self.middle.get('course') is not None and
+                self.middle.get('speed') is not None and
+                self.middle.get('timestamp') not None):
 
-            if (not self.current_track or
-                    self.end.get('mmsi', None) != self.current_track.get('mmsi', None) or
-                    self.end.get('seg_id', None) != self.current_track.get('seg_id', None)):
-                while self.startidx < self.endidx:
-                    self.startidx, self.start = self.startIn.next()
-                self.start_track()
+                if not self.row_in_current_track(self.middle):
+                    while self.startidx < self.middleidx:
+                        self.startidx, self.start = self.startIn.next()
+                    self.start_track()
 
-            self.stats.add(self.end)
-
-            if 'timestamp' in self.end:
-                while (   not self.start
-                       or 'timestamp' not in self.start
-                       or self.end['timestamp'] - self.start['timestamp'] > self.window_size):
-                    if self.start:
-                        self.stats.remove(self.start)
-
-                    self.startidx, self.start = self.startIn.next()
-                    while (self.start.get('course') is None or
-                           self.start.get('speed') is None or
-                           self.start.get('timestamp') is None):
+                if 'timestamp' in self.middle:
+                    while (   not self.start
+                           or 'timestamp' not in self.start
+                           or self.middle['timestamp'] - self.start['timestamp'] > self.window_size * (1. - self.offset)):
+                        if self.start:
+                            self.stats.remove(self.start)
                         self.startidx, self.start = self.startIn.next()
 
-            self.add_measures_to_row()
+                    while (   not self.end
+                           or (self.row_in_current_track(self.end)
+                               and ('timestamp' not in self.end
+                                    or self.end['timestamp'] - self.start['timestamp'] <= self.window_size * self.offset))):
+                        if self.end:
+                            self.stats.add(self.end)
+                        try:
+                            self.endidx, self.end = self.endIn.next()
+                        except StopIteration:
+                            break
 
-            out = self.end.copy() # XXX do we need to copy here?
+                self.middle.update(self.get_measures())
 
-            yield out
+            yield self.middle
 
 
 class AddPairMeasures(object):
