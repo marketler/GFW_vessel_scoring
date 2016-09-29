@@ -169,7 +169,7 @@ class AddWindowMeasures(object):
         for self.middleidx, self.middle in self.middleIn:
             if (self.middle.get('course') is not None and
                 self.middle.get('speed') is not None and
-                self.middle.get('timestamp') not None):
+                self.middle.get('timestamp') is not None):
 
                 if not self.row_in_current_track(self.middle):
                     while self.startidx < self.middleidx:
