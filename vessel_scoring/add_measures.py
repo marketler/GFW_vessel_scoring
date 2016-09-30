@@ -86,7 +86,7 @@ class AddWindowMeasures(object):
     Requires two handles to the _same_ stream of messages for the two ends of the window.
     """
 
-    def __init__(self, messages, window_size=datetime.timedelta(seconds=60 * 60), offset=0.0):
+    def __init__(self, messages, window_size=datetime.timedelta(seconds=60 * 60), offset=datetime.timedelta(0.0)):
         """
         Iterate to get messages with additional measures.
 
@@ -97,8 +97,7 @@ class AddWindowMeasures(object):
         window_size : datetime.timedelta, optional
             Size of window in seconds.
         offset: float ]0, 1[
-            Offset from the end of the window (as a fraction) where
-            the row to add the measures to is located.
+            Offset from the end of the window.
         """
         stream1, stream2, stream3 = itertools.tee(messages, 3)
         self.startIn = self.load_lines(stream1)
@@ -108,6 +107,7 @@ class AddWindowMeasures(object):
         self.window_size = window_size
         self.offset = offset
         self.startidx = -1
+        self.endidx = -1
         self._iterator = None
 
     def __iter__(self):
@@ -126,11 +126,11 @@ class AddWindowMeasures(object):
 
     def get_measures(self):
         s = self.stats.get()
-        # Knots...
-        s['measure_pos'] = (s['measure_pos'] * 60) / (self.window_size.total_seconds() / 60 / 60)
-        # Normalize to "normal" vessel speed
-        s['measure_pos'] /= 17.0
-        s['measure_pos'] = min(1.0, s['measure_pos'])
+        # # Knots...
+        # s['measure_pos'] = (s['measure_pos'] * 60) / (self.window_size.total_seconds() / 60 / 60)
+        # # Normalize to "normal" vessel speed
+        # s['measure_pos'] /= 17.0
+        # s['measure_pos'] = min(1.0, s['measure_pos'])
 
         s = {"%s_%s" % (key, int(self.window_size.total_seconds())): value
              for key, value in s.iteritems()}
@@ -145,6 +145,7 @@ class AddWindowMeasures(object):
     def start_track(self):
         self.current_track = self.middle
         self.stats = rolling_measures.Stats({
+            # 'speed_avg' : rolling_measures.Stat("speed", rolling_measures.Avg),
             'measure_count' :  rolling_measures.Stat('measure_speed', rolling_measures.Count),
             "measure_daylightavg": rolling_measures.Stat("measure_daylight", rolling_measures.Avg),
             "measure_coursestddev": rolling_measures.StatSum(
@@ -166,34 +167,47 @@ class AddWindowMeasures(object):
                 row.get('seg_id', None) == self.current_track.get('seg_id', None))
 
     def process(self):
+
+        def valid(x):
+            return (x and
+                    x.get('timestamp') is not None and
+                    x.get('course') is not None and                    
+                    x.get('lat') is not None and
+                    x.get('lon') is not None and
+                    x.get('speed') is not None and
+                    x.get('measure_speed') is not None
+                    )
+
         for self.middleidx, self.middle in self.middleIn:
-            if (self.middle.get('course') is not None and
-                self.middle.get('speed') is not None and
-                self.middle.get('timestamp') is not None):
+            if valid(self.middle):
 
                 if not self.row_in_current_track(self.middle):
                     while self.startidx < self.middleidx:
                         self.startidx, self.start = self.startIn.next()
+                    while self.endidx < self.middleidx:
+                        self.endidx, self.end = self.endIn.next()
                     self.start_track()
-
-                if 'timestamp' in self.middle:
-                    while (   not self.start
-                           or 'timestamp' not in self.start
-                           or self.middle['timestamp'] - self.start['timestamp'] > self.window_size * (1. - self.offset)):
-                        if self.start:
-                            self.stats.remove(self.start)
-                        self.startidx, self.start = self.startIn.next()
-
-                    while (   not self.end
-                           or (self.row_in_current_track(self.end)
-                               and ('timestamp' not in self.end
-                                    or self.end['timestamp'] - self.start['timestamp'] <= self.window_size * self.offset))):
-                        if self.end:
-                            self.stats.add(self.end)
-                        try:
-                            self.endidx, self.end = self.endIn.next()
-                        except StopIteration:
+                while self.row_in_current_track(self.end):
+                    if valid(self.end):
+                        if self.end['timestamp'] - self.middle['timestamp'] > self.offset:
                             break
+                        self.stats.add(self.end)
+                    try:
+                        self.endidx, self.end = self.endIn.next()
+                    except StopIteration:
+                        break
+
+
+                while self.row_in_current_track(self.start):
+                    if valid(self.start):
+                        if self.middle['timestamp'] - self.start['timestamp']  <= (self.window_size - self.offset):
+                            break
+                        self.stats.remove(self.start)
+                    try:
+                        self.startidx, self.start = self.startIn.next()
+                    except StopIteration:
+                        break
+
 
                 self.middle.update(self.get_measures())
 
@@ -248,12 +262,14 @@ class AddPairMeasures(object):
 
 
 
-def AddMeasures(messages, windows = [1800, 3600, 10800, 21600, 43200, 86400]):
+def AddMeasures(messages, windows = [1800, 3600, 10800, 21600, 43200, 86400],
+        offsets = [900, 1800, 5400, 10800, 21600, 43200]):
     messages = AddPointMeasures(messages)
 
     messages = AddNormalizedMeasures(messages)
 
-    for window_size in windows:
-        messages = AddWindowMeasures(messages, datetime.timedelta(seconds=window_size))
+    for window_size, delta in zip(windows, offsets):
+        messages = AddWindowMeasures(messages, datetime.timedelta(seconds=window_size), 
+                datetime.timedelta(seconds=delta))
 
     return messages
