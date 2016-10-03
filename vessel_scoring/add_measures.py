@@ -172,10 +172,7 @@ class AddWindowMeasures(object):
             return (x and
                     x.get('timestamp') is not None and
                     x.get('course') is not None and                    
-                    x.get('lat') is not None and
-                    x.get('lon') is not None and
-                    x.get('speed') is not None and
-                    x.get('measure_speed') is not None
+                    x.get('speed') is not None 
                     )
 
         for self.middleidx, self.middle in self.middleIn:
@@ -187,6 +184,7 @@ class AddWindowMeasures(object):
                     while self.endidx < self.middleidx:
                         self.endidx, self.end = self.endIn.next()
                     self.start_track()
+
                 while self.row_in_current_track(self.end):
                     if valid(self.end):
                         if self.end['timestamp'] - self.middle['timestamp'] > self.offset:
@@ -262,8 +260,8 @@ class AddPairMeasures(object):
 
 
 
-def AddMeasures(messages, windows = [1800, 3600, 10800, 21600, 43200, 86400],
-        offsets = [900, 1800, 5400, 10800, 21600, 43200]):
+def AddMeasures(messages, windows = [900, 1800, 3600, 10800, 21600, 43200, 86400],
+        offsets = [0, 0, 0, 0, 0, 0, 0]):
     messages = AddPointMeasures(messages)
 
     messages = AddNormalizedMeasures(messages)
