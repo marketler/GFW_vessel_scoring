@@ -51,15 +51,11 @@ untrained_models = {
     'Logistic (MW)': {'active': False, 'compare_models': True,
                       'model': vessel_scoring.logistic_model.LogisticModel(colspec=dict(windows=vessel_scoring.colspec.Colspec.windows), order=6),
                       'data': all_data},
-    'Logistic (MW & daylight)': {'active': False, 'compare_models': True,
-                                 'model': vessel_scoring.logistic_model.LogisticModel(colspec=dict(windows=vessel_scoring.colspec.Colspec.windows,
-                                                                                                   measures=['measure_daylight']), order=6),
-                                 'data': all_data},
     # Using `speed` here rather than `measure_speed` gives terrible results. Overflow? Just way too large?
-    'Logistic (MW & daylight & speed)': {'active': False, 'compare_models': True,
+    'Logistic (MW & speed)': {'active': False, 'compare_models': True,
                                          'model': vessel_scoring.logistic_model.LogisticModel(
                                              colspec=dict(windows=vessel_scoring.colspec.Colspec.windows,
-                                                          measures=['measure_daylight', 'measure_speed']), order=6),
+                                                          measures=['measure_speed']), order=6),
                                          'data': all_data},
     'Random Forest': {'active': False, 'compare_models': True,
                       'model': vessel_scoring.random_forest_model.RandomForestModel(colspec=dict(windows=[43200])),
@@ -67,15 +63,10 @@ untrained_models = {
     'Random Forest (MW)': {'active': False, 'compare_models': True,
                            'model': vessel_scoring.random_forest_model.RandomForestModel(colspec=dict(windows=vessel_scoring.colspec.Colspec.windows)),
                            'data': all_data},
-    'Random Forest (MW & daylight)': {'active': False, 'compare_models': True,
+    'Random Forest (MW & speed)': {'active': False, 'compare_models': True,
                                       'model': vessel_scoring.random_forest_model.RandomForestModel(colspec=dict(windows=vessel_scoring.colspec.Colspec.windows,
-                                                                                                                 measures=['measure_daylight'])),
+                                                                                                                 measures=['speed'])),
                                       'data': all_data},
-    'Random Forest (MW & daylight & speed)': {'active': False, 'compare_models': True, 'model': vessel_scoring.random_forest_model.RandomForestModel
-                                              (colspec=dict(windows=vessel_scoring.colspec.Colspec.windows,
-                                                            measures=['measure_daylight', 'speed'])),
-                                              'data': all_data},
-
 
     #### Old models ####
     'Logistic (MW/cross3)': {'active': False, 'model': vessel_scoring.logistic_model.LogisticModel(colspec=colspec, order=6, cross=2), 'data': all_data},
