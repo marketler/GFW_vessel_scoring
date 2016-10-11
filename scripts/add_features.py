@@ -7,6 +7,15 @@ from vessel_scoring import utils
 from vessel_scoring import add_measures
 import numpy as np
 
+def dedup_messages(messages):
+    last_key = None
+    for msg in messages:
+        key = (msg['mmsi'], msg['timestamp'])
+        if key == last_key:
+            continue
+        yield msg
+        last_key = key
+
 
 def add_features(in_path, out_path, default=None, keep_prob=1):
     data = np.load(in_path)['x']
@@ -26,6 +35,7 @@ def add_features(in_path, out_path, default=None, keep_prob=1):
     # Sort by mmsi, then by timestamp
     data.sort(order=['mmsi', 'timestamp'])
     messages = utils.numpy_to_messages(data)
+    messages = dedup_messages(messages)
     messages = add_measures.AddMeasures(messages)
     result = utils.messages_to_numpy(messages, len(data))
 
