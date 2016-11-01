@@ -264,7 +264,6 @@ def AddMeasures(messages, windows = [900, 1800, 3600, 10800, 21600, 43200, 86400
         offsets = [0, 0, 0, 0, 0, 0, 0]
         # offsets = [450, 900, 1800, 5400, 10800, 21600, 43200]
                ):
-                
     messages = AddPointMeasures(messages)
 
     messages = AddNormalizedMeasures(messages)
