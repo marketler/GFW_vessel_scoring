@@ -10,7 +10,7 @@ as well as development of supervised-ML scoring algorithms.
 Training data for this project is too big to store in this repository. It will be licensed separately here:
 https://github.com/GlobalFishingWatch/training-data
 
-You do not need the training data to use the predition models as the trained model parameters are stored in the repository.
+You do not need the training data to use the prediction models as the trained model parameters are stored in the repository.
 
 ## Tools
 It also contains some tools to deal with the data formats of some of our partners:
