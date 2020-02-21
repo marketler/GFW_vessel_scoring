@@ -1,4 +1,5 @@
 import vessel_scoring.add_measures
+import six
 
 class BaseModel(object):
     # def train_on_messages(self, messages):
@@ -14,7 +15,7 @@ class BaseModel(object):
                 msg.get('course', None) is not None):
                 msg['measure_new_score'] = float(self.predict_proba({
                             key: [value]
-                            for key, value in msg.iteritems()
+                            for key, value in six.iteritems(msg)
                             })[0][1])
             yield msg
         

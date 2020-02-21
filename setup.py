@@ -12,7 +12,8 @@ DEPENDENCIES = [
     "numpy",
     "scikit-learn==0.20",
     "scipy",
-    "rolling_measures"
+    "rolling_measures",
+    "six>=1.14"
 ]
 
 

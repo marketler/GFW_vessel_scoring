@@ -140,7 +140,7 @@ def load_dataset_by_vessel(path, size = 20000, even_split=None, seed=4321):
     x = x[~np.isinf(x['classification']) & ~np.isnan(x['classification']) & ~np.isnan(x['timestamp']) & ~np.isnan(x['speed']) & ~np.isnan(x['course'])]
 
     if size > len(x):
-        print "Warning, insufficient items to sample, returning all"
+        print("Warning, insufficient items to sample, returning all")
         size = len(x)
 
     # Get the list of MMSI and shuffle them. The compute the cumulative
@@ -172,8 +172,8 @@ def load_dataset_by_vessel(path, size = 20000, even_split=None, seed=4321):
         xtrain = train_subsample(x, mmsi[:n1], size//2)
         xcross = _subsample_proportional(x, mmsi[n1:n2], size//4)
         xtest = _subsample_proportional(x, mmsi[n2:], size//4)
-    except Exception, e:
-        print "Broken data in", path
+    except Exception as e:
+        print("Broken data in", path)
         import pdb, sys
         sys.last_traceback = sys.exc_info()[2]
         pdb.set_trace()

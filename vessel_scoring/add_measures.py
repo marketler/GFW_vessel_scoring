@@ -7,6 +7,7 @@ import datetime
 import itertools
 import numpy
 import rolling_measures
+import six
 
 
 def hours_per_day(latitude, day_of_year):
@@ -133,10 +134,10 @@ class AddWindowMeasures(object):
         # s['measure_pos'] = min(1.0, s['measure_pos'])
 
         s = {"%s_%s" % (key, int(self.window_size.total_seconds())): value
-             for key, value in s.iteritems()}
+             for key, value in six.iteritems(s)}
 
         EPSILON = 1e-3
-        for key, value in s.items():
+        for key, value in list(s.items()):
             if 'stddev' in key:
                 s[key + "_log"] = float(numpy.log10(value + EPSILON))
 
@@ -180,9 +181,9 @@ class AddWindowMeasures(object):
 
                 if not self.row_in_current_track(self.middle):
                     while self.startidx < self.middleidx:
-                        self.startidx, self.start = self.startIn.next()
+                        self.startidx, self.start = next(self.startIn)
                     while self.endidx < self.middleidx:
-                        self.endidx, self.end = self.endIn.next()
+                        self.endidx, self.end = next(self.endIn)
                     self.start_track()
 
                 while self.row_in_current_track(self.end):
@@ -191,7 +192,7 @@ class AddWindowMeasures(object):
                             break
                         self.stats.add(self.end)
                     try:
-                        self.endidx, self.end = self.endIn.next()
+                        self.endidx, self.end = next(self.endIn)
                     except StopIteration:
                         break
 
@@ -202,7 +203,7 @@ class AddWindowMeasures(object):
                             break
                         self.stats.remove(self.start)
                     try:
-                        self.startidx, self.start = self.startIn.next()
+                        self.startidx, self.start = next(self.startIn)
                     except StopIteration:
                         break
 
