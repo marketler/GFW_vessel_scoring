@@ -56,7 +56,7 @@ distutils.core.setup(
     install_requires=DEPENDENCIES,
     extras_require={
         'dev': ['matplotlib', 'ipython', 'coveralls']},
-    version='1.1',
+    version='2.0.0',
     author='Egil Moeller, Timothy Hochberg',
     author_email='egil@skytruth.org, tim@skytruth.org',
     url='',
