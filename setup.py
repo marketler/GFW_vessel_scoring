@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-
+from __future__ import print_function
 import os.path
 import distutils.core
 import distutils.command.build
@@ -12,7 +12,8 @@ DEPENDENCIES = [
     "numpy",
     "scikit-learn==0.20",
     "scipy",
-    "rolling_measures"
+    "rolling_measures",
+    "six>=1.14"
 ]
 
 
@@ -26,11 +27,11 @@ class BuildModelsCommand(distutils.core.Command):
     def run(self):
         if os.path.exists(os.path.join(os.path.dirname(__file__), 'vessel_scoring', 'models')):
             return
-        print "Training models...",
+        print("Training models...", end='')
         sys.stdout.flush()
         import vessel_scoring.models
         vessel_scoring.models.train_models()
-        print "done."
+        print("done.")
         sys.stdout.flush()
 
 class build(distutils.command.build.build):
@@ -55,7 +56,7 @@ distutils.core.setup(
     install_requires=DEPENDENCIES,
     extras_require={
         'dev': ['matplotlib', 'ipython', 'coveralls']},
-    version='1.1',
+    version='2.0.0',
     author='Egil Moeller, Timothy Hochberg',
     author_email='egil@skytruth.org, tim@skytruth.org',
     url='',

@@ -104,7 +104,7 @@ def train_model_on_data(model, train_data):
     return model
 
 def train_model(name, spec, dataset):
-    print "Training %s..." % name
+    print("Training %s..." % name)
     training_data = ([dataset[name]['train']
                       for name in spec['data']]
                      + [dataset[name]['cross']
