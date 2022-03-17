@@ -50,9 +50,9 @@ class LogisticModel(LogisticRegression, vessel_scoring.base_model.BaseModel):
         self.cross = cross
         self.colspec = vessel_scoring.colspec.Colspec(**colspec)
         if coef is not None:
-            self.coef_ = np.array(coef)
+            self.coef = np.array(coef)
         if intercept is not None:
-            self.intercept_ = np.array(intercept)
+            self.intercept = np.array(intercept)
 
     @property
     def windows(self):
@@ -75,8 +75,8 @@ class LogisticModel(LogisticRegression, vessel_scoring.base_model.BaseModel):
             self.order, self.cross)
 
     def dump_arg_dict(self):
-        return {'coef' : [list(item) for item in self.coef_],
-                'intercept' : list(self.intercept_),
+        return {'coef' : [list(item) for item in self.coef],
+                'intercept' : list(self.intercept),
                 'colspec' : self.colspec.dump_arg_dict(),
                 'order' : self.order,
                 'cross' : self.cross}
