@@ -1,0 +1,12 @@
+language: python
+
+python:
+  - "3.7"
+
+install:
+  - pip install nose
+
+script: nosetests
+
+notifications:
+  flowdock: d155ceb5c276d1065a2e6be5b057da84

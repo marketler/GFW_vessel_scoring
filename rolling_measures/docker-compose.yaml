@@ -1,0 +1,21 @@
+version: '2'
+services:
+  rolling_measures:
+    image: rolling_measures
+    build: .
+    volumes:
+      - ".:/opt/project"
+
+  tests:
+    image: rolling_measures
+    build: .
+    entrypoint: nosetests
+    volumes:
+      - ".:/opt/project"
+
+  bash:
+    image: rolling_measures
+    build: .
+    entrypoint: bash
+    volumes:
+      - ".:/opt/project"

@@ -1,0 +1,28 @@
+language: python
+sudo: false
+
+cache:
+  directories:
+    - "~/.cache/pip"
+
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - libfreetype6-dev
+      - libatlas-dev
+      - gfortran
+
+python:
+  - 2.7
+
+install:
+  - pip install pip setuptools wheel --upgrade
+  - pip install -e .\[dev\]
+
+script:
+  - python -c "import vessel_scoring"
+
+after_success:
+  - coveralls || echo "!! intermittent coveralls failure"
