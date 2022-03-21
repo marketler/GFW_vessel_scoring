@@ -7,7 +7,7 @@ class NegativePopulationSize(ValueError):
         self.typename = typename
         ValueError.__init__(self)
     def __str__(self):
-        return str(unicode(self))
+        return str(str(self))
     def __unicode__(self):
         return "More calls to %(type)s.remove() than to %(type)s.add()" % {"type": self.typename}
 
@@ -16,7 +16,7 @@ class NonPositivePopulationSize(ValueError):
         self.typename = typename
         ValueError.__init__(self)
     def __str__(self):
-        return str(unicode(self))
+        return str(str(self))
     def __unicode__(self):
         return "Need more calls to %(type)s.add() than to %(type)s.remove()" % {"type": self.typename}
 
